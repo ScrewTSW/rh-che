@@ -202,11 +202,6 @@ objects:
             value: ${CHE_FABRIC8_AUTH_ENDPOINT}
           - name: CHE_FABRIC8_MULTICLUSTER_OSO_PROXY_URL
             value: ${CHE_FABRIC8_MULTICLUSTER_OSO_PROXY_URL}
-          - name: CHE_DOCKER_ENABLE__CONTAINER__STOP__DETECTOR
-            valueFrom:
-              configMapKeyRef:
-                key: che-docker-enable-container-stop-detector
-                name: rhche
           - name: CHE_WORKSPACE_LOGS_ROOT__DIR
             valueFrom:
               configMapKeyRef:

@@ -23,7 +23,6 @@ data:
   che-secure-external-urls: "false"
   che-openshift-precreate-subpaths: "false"
   che-fabric8-multitenant: "true"
-  che-docker-enable-container-stop-detector: "false"
   che-workspace-logs: "/workspace_logs"
   che-keycloak-realm: "che"
   che-keycloak-client-id: "che-public"
