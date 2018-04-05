@@ -104,10 +104,17 @@ The easiest way to deploy Che on minishift is to use the minishift addon:
     cd rh-che
     ```
 
+* Install rhche-prerequisites minishift addon
+
+    ```bash
+    minishift addons install openshift/minishift-addons/rhche-prerequisites
+    minishift addons apply rhche-prerequisites
+    ```
+
 * Install rhche minishift addon
 
     ```bash
-    minishift addons install openshift/minishift-addon/rhche
+    minishift addons install openshift/minishift-addons/rhche
     minishift addons apply rhche
     ```
 
@@ -115,6 +122,7 @@ To remove the addon:
 
 ```bash
 minishift addons remove rhche && minishift addons uninstall rhche
+minishift addons remove rhche-prerequisites && minishift addons uninstall rhche-prerequisites
 ```
 
 ### Deploy to openshift.io
