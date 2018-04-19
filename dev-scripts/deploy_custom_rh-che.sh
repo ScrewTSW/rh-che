@@ -33,6 +33,7 @@ export RH_CHE_OPENSHIFT_URL=https://dev.rdu2c.fabric8.io:8443;
 export RH_CHE_JDBC_USERNAME=pgche;
 export RH_CHE_JDBC_PASSWORD=pgchepassword;
 export RH_CHE_JDBC_URL=jdbc:postgresql://postgres:5432/dbche;
+export CHE_STARTUP_TIMEOUT=256
 
 function setVars() {
   if [ "$RH_CHE_IS_V_FIVE" == "true" ]; then
@@ -321,7 +322,6 @@ if ! (echo "$CHE_APP_CONFIG_YAML" | oc process -f - | oc apply -f - 2>1 > /dev/n
   exit 1
 fi
 
-CHE_STARTUP_TIMEOUT=120
 while [[ "${RH_CHE_STATUS_PROGRESS}" != "\"True\"" || "${RH_CHE_STATUS_AVAILABLE}" != "\"True\"" ]] && [ ${CHE_STARTUP_TIMEOUT} -gt 0 ]; do
   sleep 1
   checkCheStatus
