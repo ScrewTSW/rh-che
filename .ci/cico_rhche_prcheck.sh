@@ -11,6 +11,8 @@
 # 3 - OpenShift login failed
 # 4 - command execution failed
 
+#Dummy commit
+
 set -x
 set -e
 set +o nounset
