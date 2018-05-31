@@ -1,8 +1,6 @@
 package com.redhat.che.functional.tests;
 
 import com.google.inject.Inject;
-import java.util.concurrent.ExecutionException;
-import javax.annotation.PreDestroy;
 import javax.inject.Named;
 import org.eclipse.che.selenium.core.user.DefaultTestUser;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
@@ -16,7 +14,8 @@ public class TestTestClass {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestTestClass.class);
 
-  @Inject private TestWorkspace testWorkspace;
+  @Inject
+  private TestWorkspace testWorkspace;
   @Inject
   private ProjectExplorer projectExplorer;
   @Inject
