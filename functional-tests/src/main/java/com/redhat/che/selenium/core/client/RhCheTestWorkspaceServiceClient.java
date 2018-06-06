@@ -19,6 +19,7 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
 
   private static final Logger LOG = LoggerFactory.getLogger(RhCheTestWorkspaceServiceClient.class);
   private static final CheStarterWrapper cheStarterWrapper = CheStarterWrapper.getInstance();
+  private TestUser owner = null;
 
   public RhCheTestWorkspaceServiceClient(
       TestApiEndpointUrlProvider apiEndpointProvider,
@@ -31,14 +32,17 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
       TestUserHttpJsonRequestFactoryCreator userHttpJsonRequestFactoryCreator,
       TestUser testUser) {
     super(apiEndpointProvider, userHttpJsonRequestFactoryCreator, testUser);
+    this.owner = testUser;
   }
 
-  //TODO: FIX
   @Override
   public Workspace createWorkspace(String workspaceName, int memory, MemoryMeasure memoryUnit,
       WorkspaceConfigDto workspace) throws Exception {
+    if (owner == null) {
+      throw new IllegalStateException("Workspace does not have an owner.");
+    }
     String wkspName = cheStarterWrapper.createWorkspace("create-workspace-request.json");
-    return requestFactory.fromUrl(getNameBasedUrl(wkspName, username)).request()
+    return requestFactory.fromUrl(getNameBasedUrl(wkspName, owner.getName())).request()
         .asDto(WorkspaceDto.class);
   }
 
@@ -47,9 +51,9 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
   public void start(String workspaceId, String workspaceName, DefaultTestUser workspaceOwner)
       throws Exception {
     try {
-      cheStarterWrapper.startWorkspace(ws, name);
-      waitStatus(name, owner.getName(), WorkspaceStatus.RUNNING);
-      LOG.info("Workspace " + name + "is running.");
+      cheStarterWrapper.startWorkspace(workspaceId, workspaceName);
+      waitStatus(workspaceName, workspaceOwner.getName(), WorkspaceStatus.RUNNING);
+      LOG.info("Workspace " + workspaceName + "is running.");
     } catch (Exception e) {
       LOG.error(e.getMessage());
       e.printStackTrace();

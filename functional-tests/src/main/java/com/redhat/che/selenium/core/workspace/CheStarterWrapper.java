@@ -14,9 +14,22 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import okhttp3.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Properties;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 import okhttp3.Request.Builder;
-import org.eclipse.che.api.core.model.workspace.Workspace;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.eclipse.che.selenium.core.requestfactory.TestUserHttpJsonRequestFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -24,12 +37,6 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.jboss.shrinkwrap.resolver.api.maven.embedded.EmbeddedMaven;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.util.Properties;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 /**
  * @author Anatolii Bazko
@@ -151,9 +158,9 @@ public class CheStarterWrapper {
     return null;
   }
 
-  public void startWorkspace(Workspace ws, String name) {
+  public void startWorkspace(String workspaceId, String workspaceName) {
     OkHttpClient client = new OkHttpClient();
-    String path = "/workspace/" + name;
+    String path = "/workspace/" + workspaceName;
     StringBuilder sb = new StringBuilder(cheStarterURL);
     sb.append(path);
     sb.append("?");
@@ -169,7 +176,7 @@ public class CheStarterWrapper {
         LOG.info("Prepare workspace request send. Starting workspace.");
         sb = new StringBuilder("https://" + host);
         sb.append("/api/workspace/");
-        sb.append(ws.getId());
+        sb.append(workspaceId);
         sb.append("/runtime");
         requestBuilder = new Request.Builder().url(sb.toString());
         requestBuilder.addHeader("Authorization", token);
