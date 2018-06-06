@@ -33,62 +33,50 @@ public class RhCheTestWorkspaceImpl implements TestWorkspace {
 
   private static final Logger LOG = LoggerFactory.getLogger(RhCheTestWorkspaceImpl.class);
 
+  private String name;
   private final CompletableFuture<Void> future;
   private final DefaultTestUser owner;
   private final AtomicReference<String> id;
-  private final AtomicReference<String> workspaceName;
   private final RhCheTestWorkspaceServiceClient workspaceServiceClient;
 
-  RhCheTestWorkspaceImpl(
-      String workspaceName,
+  public RhCheTestWorkspaceImpl(
       DefaultTestUser owner,
-      int memoryInGB,
-      WorkspaceConfigDto template,
       RhCheTestWorkspaceServiceClient testWorkspaceServiceClient) {
-    if (template == null) {
-      throw new IllegalStateException("Workspace template cannot be null");
-    }
     this.owner = owner;
     this.id = new AtomicReference<>();
-    if (testWorkspaceServiceClient == null) {
-      throw new IllegalArgumentException(
-          "RhCheTestWorkspaceServiceClient is null. Probably couldn't be instantiated?");
-    }
     this.workspaceServiceClient = testWorkspaceServiceClient;
-    this.workspaceName = new AtomicReference<>(workspaceName);
 
-    this.future = CompletableFuture.runAsync(
-        () -> {
-          try {
-            final Workspace ws = workspaceServiceClient
-                .createWorkspace(this.workspaceName.get(), memoryInGB, MemoryMeasure.GB, template);
-            id.set(ws.getId());
-            long start = System.currentTimeMillis();
-            workspaceServiceClient.start(this.id.get(), this.workspaceName.get(), owner);
-            LOG.info(
-                "Workspace name='{}' id='{}' started in {} sec.",
-                this.workspaceName.get(),
-                ws.getId(),
-                (System.currentTimeMillis() - start) / 1000);
-          } catch (Exception e) {
-            String errorMessage = format("Workspace name='%s' start failed.",
-                this.workspaceName.get());
-            LOG.error(errorMessage, e);
+    this.future =
+        CompletableFuture.runAsync(
+            () -> {
+              try {
 
-            try {
-              workspaceServiceClient.delete(this.workspaceName.get(), owner.getName());
-            } catch (Exception e1) {
-              LOG.error("Failed to remove workspace name='{}' when start is failed.",
-                  this.workspaceName.get());
-            }
+                final Workspace ws = workspaceServiceClient.createWorkspace();
+                name = ws.getConfig().getName();
+                long start = System.currentTimeMillis();
+                workspaceServiceClient.startWithCheStarter(ws, name, owner);
+                LOG.info(
+                    "Workspace name='{}' id='{}' started in {} sec.",
+                    name,
+                    ws.getId(),
+                    (System.currentTimeMillis() - start) / 1000);
+              } catch (Exception e) {
+                String errorMessage = format("Workspace name='%s' start failed.", name);
+                LOG.error(errorMessage, e);
 
-            if (e instanceof IllegalStateException) {
-              Assert.fail("Known issue https://github.com/eclipse/che/issues/8856", e);
-            } else {
-              throw new IllegalStateException(errorMessage, e);
-            }
-          }
-        });
+                try {
+                  workspaceServiceClient.delete(name, owner.getName());
+                } catch (Exception e1) {
+                  LOG.error("Failed to remove workspace name='{}' when start is failed.", name);
+                }
+
+                if (e instanceof IllegalStateException) {
+                  Assert.fail("Known issue https://github.com/eclipse/che/issues/8856", e);
+                } else {
+                  throw new IllegalStateException(errorMessage, e);
+                }
+              }
+            });
   }
 
   @Override
@@ -98,7 +86,7 @@ public class RhCheTestWorkspaceImpl implements TestWorkspace {
 
   @Override
   public String getName() throws ExecutionException, InterruptedException {
-    return future.thenApply(aVoid -> workspaceName.get()).get();
+    return future.thenApply(aVoid -> name).get();
   }
 
   @Override
@@ -118,7 +106,7 @@ public class RhCheTestWorkspaceImpl implements TestWorkspace {
     future.thenAccept(
         aVoid -> {
           try {
-            workspaceServiceClient.delete(workspaceName.get(), owner.getName());
+            workspaceServiceClient.delete(name, owner.getName());
           } catch (Exception e) {
             throw new RuntimeException(format("Failed to remove workspace '%s'", this), e);
           }
