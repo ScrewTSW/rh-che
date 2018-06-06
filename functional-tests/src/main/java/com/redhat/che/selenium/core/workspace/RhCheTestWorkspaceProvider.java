@@ -1,12 +1,13 @@
 package com.redhat.che.selenium.core.workspace;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.inject.Inject;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClient;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.inject.Named;
 import org.eclipse.che.commons.lang.concurrent.LoggingUncaughtExceptionHandler;
-import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClientFactory;
 import org.eclipse.che.selenium.core.user.DefaultTestUser;
 import org.eclipse.che.selenium.core.utils.WorkspaceDtoDeserializer;
@@ -16,9 +17,14 @@ import org.eclipse.che.selenium.core.workspace.WorkspaceTemplate;
 
 public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
 
-  protected RhCheTestWorkspaceProvider(String poolSize, int threads, int defaultMemoryGb,
-      DefaultTestUser defaultUser, WorkspaceDtoDeserializer workspaceDtoDeserializer,
-      TestWorkspaceServiceClient testWorkspaceServiceClient,
+  @Inject
+  protected RhCheTestWorkspaceProvider(
+      @Named("che.workspace_pool_size") String poolSize,
+      @Named("che.threads") int threads,
+      @Named("workspace.default_memory_gb") int defaultMemoryGb,
+      DefaultTestUser defaultUser,
+      WorkspaceDtoDeserializer workspaceDtoDeserializer,
+      RhCheTestWorkspaceServiceClient testWorkspaceServiceClient,
       TestWorkspaceServiceClientFactory testWorkspaceServiceClientFactory) {
     super(poolSize, threads, defaultMemoryGb, defaultUser, workspaceDtoDeserializer,
         testWorkspaceServiceClient, testWorkspaceServiceClientFactory);
@@ -44,13 +50,14 @@ public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
             try {
               testWorkspace =
                   new RhCheTestWorkspaceImpl(
+                      name,
                       defaultUser,
                       defaultMemoryGb,
                       workspaceDtoDeserializer
                           .deserializeWorkspaceTemplate(WorkspaceTemplate.DEFAULT),
                       testWorkspaceServiceClient instanceof RhCheTestWorkspaceServiceClient
                           ? (RhCheTestWorkspaceServiceClient) testWorkspaceServiceClient
-                          : null //TODO: IMPLEMENT ME!
+                          : null
                   );
             } catch (Exception e) {
               // scheduled executor service doesn't log any exceptions, so log possible exception
