@@ -30,7 +30,6 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.eclipse.che.selenium.core.requestfactory.TestUserHttpJsonRequestFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -42,29 +41,18 @@ import org.slf4j.LoggerFactory;
  * @author Anatolii Bazko
  */
 public class CheStarterWrapper {
-
   private static final Logger LOG = LoggerFactory.getLogger(CheStarterWrapper.class);
 
-  @Inject
-  @Named("che.host")
-  private String host = "rhche.openshift.io";
+//  TODO: figure out how to get it from the env
+//  @Inject
+//  @Named("che.host")
+  private String host = "rhche.prod-preview.openshift.io";
+//  @Inject
+//  @Named("che.osio.url")
+  private String osioUrlPart = "prod-preview.openshift.io";
+  private String cheStarterURL = "http://localhost:10000";
 
-  @Inject
-  TestUserHttpJsonRequestFactory requestFactory;
-
-  String cheStarterURL = "http://localhost:10000";
-  String token = "active_token";
-
-  private static CheStarterWrapper cheStarterWrapper;
-
-  private CheStarterWrapper() {
-  }
-
-  public static CheStarterWrapper getInstance() {
-    if (cheStarterWrapper == null) {
-      cheStarterWrapper = new CheStarterWrapper();
-    }
-    return cheStarterWrapper;
+  public CheStarterWrapper(){
   }
 
   public void start() {
@@ -74,7 +62,6 @@ public class CheStarterWrapper {
 
       cloneGitDirectory(cheStarterDir);
 
-      String osioUrlPart = "openshift.io"; // TODO - get url!
       LOG.info("Running che starter.");
       Properties props = new Properties();
       props.setProperty(
@@ -113,7 +100,7 @@ public class CheStarterWrapper {
     }
   }
 
-  public String createWorkspace(String pathToJson) {
+  public String createWorkspace(String pathToJson, String token) {
     //return "tcy8y";
     BufferedReader buffer = null;
     try {
@@ -128,10 +115,10 @@ public class CheStarterWrapper {
     StringBuilder sb = new StringBuilder(cheStarterURL);
     sb.append(path);
     sb.append("?");
-    sb.append("masterUrl=").append(host).append("&").append("namespace=kkanova-che");
+    sb.append("masterUrl=").append(host).append("&").append("namespace=sth");
     Builder requestBuilder = new Request.Builder().url(sb.toString());
     requestBuilder.addHeader("Content-Type", "application/json");
-    requestBuilder.addHeader("Authorization", token);
+    requestBuilder.addHeader("Authorization", "Bearer " + token);
     Request request = requestBuilder.post(body).build();
     OkHttpClient client = new OkHttpClient();
     try {
@@ -144,13 +131,11 @@ public class CheStarterWrapper {
     return null;
   }
 
-  private String getNameFromResponse(Response response) {
+  private String getNameFromResponse(Response response){
     try {
       String responseString = response.body().string();
-      Object jsonDocument = Configuration.defaultConfiguration().jsonProvider()
-          .parse(responseString);
+      Object jsonDocument = Configuration.defaultConfiguration().jsonProvider().parse(responseString);
       return JsonPath.read(jsonDocument, "$.config.name");
-
     } catch (IOException e) {
       LOG.error(e.getLocalizedMessage());
       e.printStackTrace();
@@ -158,31 +143,31 @@ public class CheStarterWrapper {
     return null;
   }
 
-  public void startWorkspace(String workspaceId, String workspaceName) {
+  public void startWorkspace(String WorkspaceID, String name, String token) {
     OkHttpClient client = new OkHttpClient();
-    String path = "/workspace/" + workspaceName;
+    String path = "/workspace/" + name;
     StringBuilder sb = new StringBuilder(cheStarterURL);
     sb.append(path);
     sb.append("?");
-    sb.append("masterUrl=").append(host).append("&").append("namespace=kkanova-che");
+    sb.append("masterUrl=").append(host).append("&").append("namespace=sthf");
     Builder requestBuilder = new Request.Builder().url(sb.toString());
-    requestBuilder.addHeader("Authorization", token);
+    requestBuilder.addHeader("Authorization", "Bearer " + token);
     RequestBody body = RequestBody.create(null, new byte[0]);
     Request request = requestBuilder.patch(body).build();
     Response response = null;
     try {
       response = client.newCall(request).execute();
-      if (response.isSuccessful()) {
+      if(response.isSuccessful()) {
         LOG.info("Prepare workspace request send. Starting workspace.");
         sb = new StringBuilder("https://" + host);
         sb.append("/api/workspace/");
-        sb.append(workspaceId);
+        sb.append(WorkspaceID);
         sb.append("/runtime");
         requestBuilder = new Request.Builder().url(sb.toString());
-        requestBuilder.addHeader("Authorization", token);
+        requestBuilder.addHeader("Authorization", "Bearer " + token);
         request = requestBuilder.post(body).build();
         response = client.newCall(request).execute();
-        if (response.isSuccessful()) {
+        if(response.isSuccessful()){
           LOG.info("Workspace was started. Waiting until workspace is running.");
         }
       }

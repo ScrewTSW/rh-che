@@ -1,5 +1,8 @@
 package com.redhat.che.selenium.core.client;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 import com.redhat.che.selenium.core.workspace.CheStarterWrapper;
 import org.eclipse.che.api.core.model.workspace.Workspace;
 import org.eclipse.che.api.core.model.workspace.WorkspaceStatus;
@@ -18,21 +21,33 @@ import org.slf4j.LoggerFactory;
 public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServiceClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(RhCheTestWorkspaceServiceClient.class);
-  private static final CheStarterWrapper cheStarterWrapper = CheStarterWrapper.getInstance();
   private TestUser owner = null;
+  private String token = null;
 
+  @Inject
+  private DefaultTestUser defaultTestUser;
+  @Inject
+  private CheStarterWrapper cheStarterWrapper;
+
+  @Inject
   public RhCheTestWorkspaceServiceClient(
       TestApiEndpointUrlProvider apiEndpointProvider,
       HttpJsonRequestFactory requestFactory) {
     super(apiEndpointProvider, requestFactory);
+    LOG.warn("TestWorkspaceServiceClient instantiated with request factory - no owner set.");
+    this.owner = this.defaultTestUser;
+    this.token = this.owner.obtainAuthToken();
   }
 
+  @AssistedInject
   public RhCheTestWorkspaceServiceClient(
       TestApiEndpointUrlProvider apiEndpointProvider,
       TestUserHttpJsonRequestFactoryCreator userHttpJsonRequestFactoryCreator,
-      TestUser testUser) {
+      @Assisted TestUser testUser) {
     super(apiEndpointProvider, userHttpJsonRequestFactoryCreator, testUser);
+    LOG.info("TestWorkspaceServiceClient instantiated with RequestFactoryCreator - owner set.");
     this.owner = testUser;
+    this.token = this.owner.obtainAuthToken();
   }
 
   @Override
@@ -41,23 +56,22 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
     if (owner == null) {
       throw new IllegalStateException("Workspace does not have an owner.");
     }
-    String wkspName = cheStarterWrapper.createWorkspace("create-workspace-request.json");
-    return requestFactory.fromUrl(getNameBasedUrl(wkspName, owner.getName())).request()
+    String name = cheStarterWrapper.createWorkspace("create-workspace-request.json", token);
+    return requestFactory.fromUrl(getNameBasedUrl(name, owner.getName())).request()
         .asDto(WorkspaceDto.class);
   }
 
-  //TODO: FIX
   @Override
   public void start(String workspaceId, String workspaceName, DefaultTestUser workspaceOwner)
       throws Exception {
+    cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
     try {
-      cheStarterWrapper.startWorkspace(workspaceId, workspaceName);
-      waitStatus(workspaceName, workspaceOwner.getName(), WorkspaceStatus.RUNNING);
+      cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
+      waitStatus(workspaceName, owner.getName(), WorkspaceStatus.RUNNING);
       LOG.info("Workspace " + workspaceName + "is running.");
     } catch (Exception e) {
       LOG.error(e.getMessage());
       e.printStackTrace();
     }
   }
-
 }

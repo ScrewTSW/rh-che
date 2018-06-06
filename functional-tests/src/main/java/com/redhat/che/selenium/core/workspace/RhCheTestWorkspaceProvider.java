@@ -3,16 +3,17 @@ package com.redhat.che.selenium.core.workspace;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClient;
+import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClientFactory;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Named;
 import org.eclipse.che.commons.lang.concurrent.LoggingUncaughtExceptionHandler;
-import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClientFactory;
 import org.eclipse.che.selenium.core.user.DefaultTestUser;
 import org.eclipse.che.selenium.core.utils.WorkspaceDtoDeserializer;
 import org.eclipse.che.selenium.core.workspace.AbstractTestWorkspaceProvider;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
+import org.eclipse.che.selenium.core.workspace.TestWorkspaceImpl;
 import org.eclipse.che.selenium.core.workspace.WorkspaceTemplate;
 
 public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
@@ -25,9 +26,16 @@ public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
       DefaultTestUser defaultUser,
       WorkspaceDtoDeserializer workspaceDtoDeserializer,
       RhCheTestWorkspaceServiceClient testWorkspaceServiceClient,
-      TestWorkspaceServiceClientFactory testWorkspaceServiceClientFactory) {
+      RhCheTestWorkspaceServiceClientFactory testWorkspaceServiceClientFactory,
+      CheStarterWrapper cheStarterWrapper) {
     super(poolSize, threads, defaultMemoryGb, defaultUser, workspaceDtoDeserializer,
         testWorkspaceServiceClient, testWorkspaceServiceClientFactory);
+    cheStarterWrapper.start();
+  }
+
+  @Override
+  public TestWorkspace createWorkspace(DefaultTestUser owner, int memoryGB, String template) {
+    return new RhCheTestWorkspaceImpl()
   }
 
   @Override
