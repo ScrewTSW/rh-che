@@ -100,13 +100,13 @@ public class CheStarterWrapper {
     }
   }
 
-  public String createWorkspace(String pathToJson, String token) {
-    //return "tcy8y";
+  public String createWorkspace(String pathToJson, String token) throws Exception{
     BufferedReader buffer = null;
     try {
-      buffer = new BufferedReader(new InputStreamReader(new FileInputStream(new File(pathToJson))));
-    } catch (FileNotFoundException e) {
+      buffer = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(pathToJson)));
+    } catch (Exception e) {
       LOG.error("File with json was not found on address: " + pathToJson, e);
+      throw e;
     }
     String json = buffer.lines().collect(Collectors.joining("\n"));
     String path = "/workspace";

@@ -21,20 +21,22 @@ import org.slf4j.LoggerFactory;
 public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServiceClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(RhCheTestWorkspaceServiceClient.class);
+  private static final String CREATE_WORKSPACE_REQUEST_JSON_PATH = "/configs/create-workspace-request.json";
+
   private TestUser owner = null;
   private String token = null;
-
-  @Inject
-  private CheStarterWrapper cheStarterWrapper;
+  private CheStarterWrapper cheStarterWrapper = null;
 
   @Inject
   public RhCheTestWorkspaceServiceClient(
       TestApiEndpointUrlProvider apiEndpointProvider,
       HttpJsonRequestFactory requestFactory,
-      DefaultTestUser defaultTestUser) {
+      DefaultTestUser defaultTestUser,
+      CheStarterWrapper cheStarterWrapper) {
     super(apiEndpointProvider, requestFactory);
     LOG.warn("TestWorkspaceServiceClient instantiated with request factory - using default owner.");
     this.owner = defaultTestUser;
+    this.cheStarterWrapper = cheStarterWrapper;
     this.token = this.owner.obtainAuthToken();
   }
 
@@ -42,10 +44,12 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
   public RhCheTestWorkspaceServiceClient(
       TestApiEndpointUrlProvider apiEndpointProvider,
       TestUserHttpJsonRequestFactoryCreator userHttpJsonRequestFactoryCreator,
-      @Assisted TestUser testUser) {
+      @Assisted TestUser testUser,
+      CheStarterWrapper cheStarterWrapper) {
     super(apiEndpointProvider, userHttpJsonRequestFactoryCreator, testUser);
     LOG.info("TestWorkspaceServiceClient instantiated with RequestFactoryCreator - owner set to provided TestUser.");
     this.owner = testUser;
+    this.cheStarterWrapper = cheStarterWrapper;
     this.token = this.owner.obtainAuthToken();
   }
 
@@ -59,16 +63,16 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
     if (owner == null) {
       throw new IllegalStateException("Workspace does not have an owner.");
     }
-    String name = cheStarterWrapper.createWorkspace("create-workspace-request.json", token);
+    String name = this.cheStarterWrapper.createWorkspace(CREATE_WORKSPACE_REQUEST_JSON_PATH, token);
     return requestFactory.fromUrl(getNameBasedUrl(name, owner.getName())).request()
         .asDto(WorkspaceDto.class);
   }
 
   @Override
   public void start(String workspaceId, String workspaceName, TestUser workspaceOwner) {
-    cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
+    this.cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
     try {
-      cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
+      this.cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
       waitStatus(workspaceName, owner.getName(), WorkspaceStatus.RUNNING);
       LOG.info("Workspace " + workspaceName + "is running.");
     } catch (Exception e) {
