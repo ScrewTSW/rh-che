@@ -10,11 +10,10 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Named;
 import org.eclipse.che.commons.lang.concurrent.LoggingUncaughtExceptionHandler;
 import org.eclipse.che.selenium.core.user.DefaultTestUser;
+import org.eclipse.che.selenium.core.user.TestUser;
 import org.eclipse.che.selenium.core.utils.WorkspaceDtoDeserializer;
 import org.eclipse.che.selenium.core.workspace.AbstractTestWorkspaceProvider;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
-import org.eclipse.che.selenium.core.workspace.TestWorkspaceImpl;
-import org.eclipse.che.selenium.core.workspace.WorkspaceTemplate;
 
 public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
 
@@ -34,8 +33,13 @@ public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
   }
 
   @Override
-  public TestWorkspace createWorkspace(DefaultTestUser owner, int memoryGB, String template) {
-    return new RhCheTestWorkspaceImpl()
+  public TestWorkspace createWorkspace(TestUser owner, int memoryGB, String template) {
+    return new RhCheTestWorkspaceImpl(
+        owner,
+        testWorkspaceServiceClient instanceof RhCheTestWorkspaceServiceClient
+            ? (RhCheTestWorkspaceServiceClient) testWorkspaceServiceClient
+            : null
+    );
   }
 
   @Override
@@ -58,11 +62,7 @@ public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
             try {
               testWorkspace =
                   new RhCheTestWorkspaceImpl(
-                      name,
                       defaultUser,
-                      defaultMemoryGb,
-                      workspaceDtoDeserializer
-                          .deserializeWorkspaceTemplate(WorkspaceTemplate.DEFAULT),
                       testWorkspaceServiceClient instanceof RhCheTestWorkspaceServiceClient
                           ? (RhCheTestWorkspaceServiceClient) testWorkspaceServiceClient
                           : null

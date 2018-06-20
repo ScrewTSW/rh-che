@@ -25,17 +25,16 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
   private String token = null;
 
   @Inject
-  private DefaultTestUser defaultTestUser;
-  @Inject
   private CheStarterWrapper cheStarterWrapper;
 
   @Inject
   public RhCheTestWorkspaceServiceClient(
       TestApiEndpointUrlProvider apiEndpointProvider,
-      HttpJsonRequestFactory requestFactory) {
+      HttpJsonRequestFactory requestFactory,
+      DefaultTestUser defaultTestUser) {
     super(apiEndpointProvider, requestFactory);
-    LOG.warn("TestWorkspaceServiceClient instantiated with request factory - no owner set.");
-    this.owner = this.defaultTestUser;
+    LOG.warn("TestWorkspaceServiceClient instantiated with request factory - using default owner.");
+    this.owner = defaultTestUser;
     this.token = this.owner.obtainAuthToken();
   }
 
@@ -45,9 +44,13 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
       TestUserHttpJsonRequestFactoryCreator userHttpJsonRequestFactoryCreator,
       @Assisted TestUser testUser) {
     super(apiEndpointProvider, userHttpJsonRequestFactoryCreator, testUser);
-    LOG.info("TestWorkspaceServiceClient instantiated with RequestFactoryCreator - owner set.");
+    LOG.info("TestWorkspaceServiceClient instantiated with RequestFactoryCreator - owner set to provided TestUser.");
     this.owner = testUser;
     this.token = this.owner.obtainAuthToken();
+  }
+
+  public Workspace createWorkspaceWithCheStarter() throws Exception {
+    return createWorkspace(null, 0, null, null);
   }
 
   @Override
@@ -62,8 +65,7 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
   }
 
   @Override
-  public void start(String workspaceId, String workspaceName, DefaultTestUser workspaceOwner)
-      throws Exception {
+  public void start(String workspaceId, String workspaceName, TestUser workspaceOwner) {
     cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
     try {
       cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);

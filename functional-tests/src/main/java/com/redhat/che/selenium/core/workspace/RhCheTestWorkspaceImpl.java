@@ -18,9 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.PreDestroy;
 import org.eclipse.che.api.core.model.workspace.Workspace;
-import org.eclipse.che.api.workspace.shared.dto.WorkspaceConfigDto;
-import org.eclipse.che.selenium.core.user.DefaultTestUser;
-import org.eclipse.che.selenium.core.workspace.MemoryMeasure;
+import org.eclipse.che.selenium.core.user.TestUser;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,41 +31,51 @@ public class RhCheTestWorkspaceImpl implements TestWorkspace {
 
   private static final Logger LOG = LoggerFactory.getLogger(RhCheTestWorkspaceImpl.class);
 
-  private String name;
-  private final CompletableFuture<Void> future;
-  private final DefaultTestUser owner;
-  private final AtomicReference<String> id;
-  private final RhCheTestWorkspaceServiceClient workspaceServiceClient;
+  private CompletableFuture<Void> future;
+  private AtomicReference<String> id;
+  private AtomicReference<String> workspaceName;
+  private AtomicReference<TestUser> owner;
+  private RhCheTestWorkspaceServiceClient workspaceServiceClient;
 
   public RhCheTestWorkspaceImpl(
-      DefaultTestUser owner,
+      TestUser owner,
       RhCheTestWorkspaceServiceClient testWorkspaceServiceClient) {
-    this.owner = owner;
     this.id = new AtomicReference<>();
+    this.workspaceName = new AtomicReference<>();
+    this.owner = new AtomicReference<>();
+    this.owner.set(owner);
     this.workspaceServiceClient = testWorkspaceServiceClient;
+    if (this.workspaceServiceClient == null) {
+      throw new IllegalArgumentException(
+          "workspaceServiceClient is null. Probably AbstractTestWorkspaceServiceClient is not instance of RhChe...");
+    }
 
     this.future =
         CompletableFuture.runAsync(
             () -> {
               try {
-
-                final Workspace ws = workspaceServiceClient.createWorkspace();
-                name = ws.getConfig().getName();
+                final Workspace ws = workspaceServiceClient.createWorkspaceWithCheStarter();
+                this.id.set(ws.getId());
+                this.workspaceName.set(ws.getConfig().getName());
                 long start = System.currentTimeMillis();
-                workspaceServiceClient.startWithCheStarter(ws, name, owner);
+                workspaceServiceClient
+                    .start(this.id.get(), this.workspaceName.get(), this.owner.get());
                 LOG.info(
                     "Workspace name='{}' id='{}' started in {} sec.",
-                    name,
+                    workspaceName.get(),
                     ws.getId(),
                     (System.currentTimeMillis() - start) / 1000);
               } catch (Exception e) {
-                String errorMessage = format("Workspace name='%s' start failed.", name);
+                String errorMessage = format("Workspace name='%s' start failed.",
+                    this.workspaceName.get());
                 LOG.error(errorMessage, e);
 
                 try {
-                  workspaceServiceClient.delete(name, owner.getName());
+                  workspaceServiceClient
+                      .delete(this.workspaceName.get(), this.owner.get().getName());
                 } catch (Exception e1) {
-                  LOG.error("Failed to remove workspace name='{}' when start is failed.", name);
+                  LOG.error("Failed to remove workspace name='{}' when start is failed.",
+                      this.workspaceName.get());
                 }
 
                 if (e instanceof IllegalStateException) {
@@ -81,32 +89,33 @@ public class RhCheTestWorkspaceImpl implements TestWorkspace {
 
   @Override
   public void await() throws InterruptedException, ExecutionException {
-    future.get();
+    this.future.get();
   }
 
   @Override
   public String getName() throws ExecutionException, InterruptedException {
-    return future.thenApply(aVoid -> name).get();
+    return this.future.thenApply(aVoid -> this.workspaceName.get()).get();
   }
 
   @Override
   public String getId() throws ExecutionException, InterruptedException {
-    return future.thenApply(aVoid -> id.get()).get();
+    return this.future.thenApply(aVoid -> this.id.get()).get();
   }
 
   @Override
-  public DefaultTestUser getOwner() {
-    return owner;
+  public TestUser getOwner() {
+    return this.owner.get();
   }
 
   @PreDestroy
   @Override
   @SuppressWarnings("FutureReturnValueIgnored")
   public void delete() {
-    future.thenAccept(
+    this.future.thenAccept(
         aVoid -> {
           try {
-            workspaceServiceClient.delete(name, owner.getName());
+            this.workspaceServiceClient
+                .delete(this.workspaceName.get(), this.owner.get().getName());
           } catch (Exception e) {
             throw new RuntimeException(format("Failed to remove workspace '%s'", this), e);
           }
