@@ -69,7 +69,7 @@ public class CheStarterWrapper {
       }
     }
   }
-
+  
   public void start() throws IllegalStateException {
     //TODO: Check if che starter is running;
     try {
