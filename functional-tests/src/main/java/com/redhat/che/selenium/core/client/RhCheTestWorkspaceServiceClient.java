@@ -70,7 +70,6 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
 
   @Override
   public void start(String workspaceId, String workspaceName, TestUser workspaceOwner) {
-    this.cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
     try {
       this.cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
       waitStatus(workspaceName, owner.getName(), WorkspaceStatus.RUNNING);
@@ -80,4 +79,5 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
       e.printStackTrace();
     }
   }
+
 }

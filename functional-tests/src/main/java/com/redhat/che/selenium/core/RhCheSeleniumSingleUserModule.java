@@ -9,10 +9,12 @@ import org.eclipse.che.selenium.core.provider.DefaultTestUserProvider;
 import org.eclipse.che.selenium.core.user.SingleUserCheDefaultTestUserProvider;
 
 public class RhCheSeleniumSingleUserModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(TestAuthServiceClient.class).to(CheTestAuthServiceClient.class);
-        bind(TestMachineServiceClient.class).to(DummyCheTestMachineServiceClient.class);
-        bind(DefaultTestUserProvider.class).to(SingleUserCheDefaultTestUserProvider.class);
-    }
+
+  @Override
+  protected void configure() {
+    bind(TestAuthServiceClient.class).to(CheTestAuthServiceClient.class);
+    bind(TestMachineServiceClient.class).to(DummyCheTestMachineServiceClient.class);
+    bind(DefaultTestUserProvider.class).to(SingleUserCheDefaultTestUserProvider.class);
+  }
+
 }
