@@ -4,6 +4,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClient;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClientFactory;
+import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,8 @@ import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 
 public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
 
+  private CheStarterWrapper cheStarterWrapper;
+
   @Inject
   protected RhCheTestWorkspaceProvider(
       @Named("che.workspace_pool_size") String poolSize,
@@ -29,11 +32,12 @@ public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
       CheStarterWrapper cheStarterWrapper) {
     super(poolSize, threads, defaultMemoryGb, defaultUser, workspaceDtoDeserializer,
         testWorkspaceServiceClient, testWorkspaceServiceClientFactory);
-    cheStarterWrapper.start();
+    this.cheStarterWrapper = cheStarterWrapper;
   }
 
   @Override
   public TestWorkspace createWorkspace(TestUser owner, int memoryGB, String template) {
+    this.cheStarterWrapper.start();
     return new RhCheTestWorkspaceImpl(
         owner,
         testWorkspaceServiceClient instanceof RhCheTestWorkspaceServiceClient

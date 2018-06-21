@@ -3,6 +3,7 @@ package com.redhat.che.functional.tests;
 import com.google.inject.Inject;
 import javax.inject.Named;
 import org.eclipse.che.selenium.core.user.DefaultTestUser;
+import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.Menu;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.slf4j.Logger;
@@ -13,7 +14,7 @@ public class TestTestClass {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestTestClass.class);
 
-  //    @Inject private TestWorkspace testWorkspace;
+  @Inject private TestWorkspace testWorkspace;
   @Inject
   private ProjectExplorer projectExplorer;
   @Inject
