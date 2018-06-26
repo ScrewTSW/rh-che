@@ -1,6 +1,8 @@
 package com.redhat.che.functional.tests;
 
 import com.google.inject.Inject;
+import java.util.concurrent.ExecutionException;
+import javax.annotation.PreDestroy;
 import javax.inject.Named;
 import org.eclipse.che.selenium.core.user.DefaultTestUser;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
