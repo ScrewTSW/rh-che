@@ -36,7 +36,7 @@ public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
   }
 
   @Override
-  public TestWorkspace createWorkspace(TestUser owner, int memoryGB, String template) {
+  public TestWorkspace createWorkspace(TestUser owner, int memoryGB, String template, boolean startAfterCreation) {
     this.cheStarterWrapper.start();
     return new RhCheTestWorkspaceImpl(
         owner,
