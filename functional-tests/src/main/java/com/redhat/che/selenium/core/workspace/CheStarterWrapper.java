@@ -14,11 +14,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
-import com.redhat.che.selenium.core.RhCheSeleniumTestHandler;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Properties;
@@ -31,7 +28,6 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.eclipse.che.selenium.core.constant.TestMenuCommandsConstants.Run;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
@@ -109,18 +105,6 @@ public class CheStarterWrapper {
     }
   }
 
-  private void cloneGitDirectory(File cheStarterDir) throws GitAPIException {
-    LOG.info("Cloning che-starter project.");
-    try {
-      Git.cloneRepository()
-          .setURI("https://github.com/redhat-developer/che-starter")
-          .setDirectory(cheStarterDir)
-          .call();
-    } catch (JGitInternalException ex) {
-      // repository already cloned. Do nothing.
-    }
-  }
-
   public String createWorkspace(String pathToJson, String token) throws Exception {
     BufferedReader buffer = null;
     try {
@@ -134,10 +118,13 @@ public class CheStarterWrapper {
     String path = "/workspace";
     MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     RequestBody body = RequestBody.create(JSON, json);
-    StringBuilder sb = new StringBuilder(this.cheStarterURL);
-    sb.append(path);
-    sb.append("?");
-    sb.append("masterUrl=").append(this.host).append("&").append("namespace=sth");
+    StringBuilder sb = new StringBuilder(this.cheStarterURL)
+        .append(path)
+        .append("?")
+        .append("masterUrl=")
+        .append(this.host)
+        .append("&")
+        .append("namespace=sth");
     Builder requestBuilder = new Request.Builder().url(sb.toString());
     requestBuilder.addHeader("Content-Type", "application/json");
     requestBuilder.addHeader("Authorization", "Bearer " + token);
@@ -145,28 +132,34 @@ public class CheStarterWrapper {
     OkHttpClient client = new OkHttpClient();
     try {
       Response response = client.newCall(request).execute();
-      String name = getNameFromResponse(response);
-      return name;
+      return getNameFromResponse(response);
     } catch (IOException e) {
-      LOG.error("Could not send request to che-starter correctly.", e);
+      LOG.error("Workspace could not be created : "+e.getMessage(), e);
+      return null;
     }
-    return null;
   }
 
-  private String getNameFromResponse(Response response) {
+  public boolean deleteWorkspace(String workspaceName, String token) {
+    StringBuilder sb = new StringBuilder(this.cheStarterURL);
+    String path = "/workspace/" + workspaceName;
+    sb.append(path);
+    sb.append("?");
+    sb.append("masterUrl=").append(this.host).append("&").append("namespace=sth");
+    Builder requestBuilder = new Request.Builder().url(sb.toString());
+    requestBuilder.addHeader("Content-Type", "application/json");
+    requestBuilder.addHeader("Authorization", "Bearer " + token);
+    OkHttpClient client = new OkHttpClient();
     try {
-      String responseString = response.body().string();
-      Object jsonDocument = Configuration.defaultConfiguration().jsonProvider()
-          .parse(responseString);
-      return JsonPath.read(jsonDocument, "$.config.name");
+      Response response = client.newCall(requestBuilder.delete().build()).execute();
+      LOG.info("Workspace delete response : "+response.message());
+      return response.isSuccessful();
     } catch (IOException e) {
-      LOG.error(e.getLocalizedMessage());
-      e.printStackTrace();
+      LOG.error("Workspace could not be deleted : "+e.getMessage(), e);
+      return false;
     }
-    return null;
   }
 
-  public void startWorkspace(String WorkspaceID, String name, String token) {
+  public void startWorkspace(String WorkspaceID, String name, String token) throws Exception {
     OkHttpClient client = new OkHttpClient();
     String path = "/workspace/" + name;
     StringBuilder sb = new StringBuilder(this.cheStarterURL);
@@ -177,9 +170,8 @@ public class CheStarterWrapper {
     requestBuilder.addHeader("Authorization", "Bearer " + token);
     RequestBody body = RequestBody.create(null, new byte[0]);
     Request request = requestBuilder.patch(body).build();
-    Response response = null;
     try {
-      response = client.newCall(request).execute();
+      Response response = client.newCall(request).execute();
       if (response.isSuccessful()) {
         LOG.info("Prepare workspace request send. Starting workspace.");
         sb = new StringBuilder("https://" + this.host);
@@ -195,11 +187,38 @@ public class CheStarterWrapper {
         }
       }
     } catch (IOException e) {
+      LOG.error("Workspace start failed : "+e.getMessage(), e);
+      throw e;
+    }
+  }
+
+  // ================= //
+  //  PRIVATE METHODS  //
+  // ================= //
+
+  private String getNameFromResponse(Response response) {
+    try {
+      String responseString = response.body().string();
+      Object jsonDocument = Configuration.defaultConfiguration().jsonProvider()
+          .parse(responseString);
+      return JsonPath.read(jsonDocument, "$.config.name");
+    } catch (IOException e) {
       LOG.error(e.getLocalizedMessage());
       e.printStackTrace();
+    }
+    return null;
+  }
+
+  private void cloneGitDirectory(File cheStarterDir) throws GitAPIException {
+    LOG.info("Cloning che-starter project.");
+    try {
+      Git.cloneRepository()
+          .setURI("https://github.com/redhat-developer/che-starter")
+          .setDirectory(cheStarterDir)
+          .call();
+    } catch (JGitInternalException ex) {
+      // repository already cloned. Do nothing.
     }
   }
 
 }
-
-

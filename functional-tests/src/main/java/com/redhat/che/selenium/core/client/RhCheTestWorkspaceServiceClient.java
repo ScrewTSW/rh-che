@@ -47,7 +47,8 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
       @Assisted TestUser testUser,
       CheStarterWrapper cheStarterWrapper) {
     super(apiEndpointProvider, userHttpJsonRequestFactoryCreator, testUser);
-    LOG.info("TestWorkspaceServiceClient instantiated with RequestFactoryCreator - owner set to provided TestUser.");
+    LOG.info(
+        "TestWorkspaceServiceClient instantiated with RequestFactoryCreator - owner set to provided TestUser.");
     this.owner = testUser;
     this.cheStarterWrapper = cheStarterWrapper;
     this.token = this.owner.obtainAuthToken();
@@ -69,14 +70,31 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
   }
 
   @Override
-  public void start(String workspaceId, String workspaceName, TestUser workspaceOwner) {
+  public void start(String workspaceId, String workspaceName, TestUser workspaceOwner)
+      throws Exception {
     try {
       this.cheStarterWrapper.startWorkspace(workspaceId, workspaceName, token);
       waitStatus(workspaceName, owner.getName(), WorkspaceStatus.RUNNING);
       LOG.info("Workspace " + workspaceName + "is running.");
     } catch (Exception e) {
-      LOG.error(e.getMessage());
-      e.printStackTrace();
+      LOG.error("Failed to start workspace \"" + workspaceName + "\": " + e.getMessage(), e);
+      throw e;
+    }
+  }
+
+  @Override
+  public void delete(String workspaceName, String userName) throws Exception {
+    try {
+      boolean isDeleted = this.cheStarterWrapper.deleteWorkspace(workspaceName, token);
+      if (!isDeleted) {
+        LOG.error(
+            "Failed to delete workspace \"" + workspaceName + "\": Che-starter response is false");
+        throw new IllegalStateException(
+            "Failed to delete workspace \"" + workspaceName + "\": Che-starter response is false");
+      }
+    } catch (Exception e) {
+      LOG.error("Failed to delete workspace \"" + workspaceName + "\": " + e.getMessage(), e);
+      throw e;
     }
   }
 
