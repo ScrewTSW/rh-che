@@ -194,7 +194,7 @@ public class CheStarterWrapper {
     }
   }
 
-  private String getNameFromResponse(Response response) {
+  private String getNameFromResponse(Response response) throws IOException{
     try {
       String responseString = response.body().string();
       Object jsonDocument = Configuration.defaultConfiguration().jsonProvider()
@@ -202,8 +202,8 @@ public class CheStarterWrapper {
       return JsonPath.read(jsonDocument, "$.config.name");
     } catch (IOException e) {
       LOG.error(e.getLocalizedMessage());
+      throw e;
     }
-    return null;
   }
 
   private void cloneGitDirectory(File cheStarterDir) throws GitAPIException {

@@ -2,6 +2,7 @@ package com.redhat.che.selenium.core.workspace;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClient;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClientFactory;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import org.eclipse.che.selenium.core.utils.WorkspaceDtoDeserializer;
 import org.eclipse.che.selenium.core.workspace.AbstractTestWorkspaceProvider;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 
+@Singleton
 public class RhCheTestWorkspaceProvider extends AbstractTestWorkspaceProvider {
 
   private CheStarterWrapper cheStarterWrapper;
