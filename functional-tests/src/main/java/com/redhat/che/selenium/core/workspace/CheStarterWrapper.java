@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Anatolii Bazko
+ * @author Tibor Dancs
  */
 public class CheStarterWrapper {
 
@@ -45,15 +45,18 @@ public class CheStarterWrapper {
   private String host;
   private String osioUrlPart;
   private String cheStarterURL = "http://localhost:10000";
+  private String userdir;
 
   @Inject
   public CheStarterWrapper(
       @Named("che.osio.url") String osioUrlPart,
       @Named("che.host") String cheHost,
-      @Named("che.chromedriver.port") String chromedriverPort
+      @Named("che.chromedriver.port") String chromedriverPort,
+      @Named("sys.user.dir") String userdir
   ) throws IOException, InterruptedException {
     this.host = cheHost;
     this.osioUrlPart = osioUrlPart;
+    this.userdir = userdir;
     /* RUN CHROMEDRIVER */
     String chromeDriverCheckCommand =
         "lsof -i TCP | grep -q 'localhost:" + chromedriverPort + " (LISTEN)'";
@@ -71,10 +74,9 @@ public class CheStarterWrapper {
   }
 
   public void start() throws IllegalStateException {
-    //TODO: Check if che starter is running;
     try {
       File cheStarterDir =
-          new File(System.getProperty("user.dir"), "target" + File.separator + "che-starter");
+          new File(userdir, "target" + File.separator + "che-starter");
 
       cloneGitDirectory(cheStarterDir);
 
@@ -135,7 +137,7 @@ public class CheStarterWrapper {
       return getNameFromResponse(response);
     } catch (IOException e) {
       LOG.error("Workspace could not be created : "+e.getMessage(), e);
-      return null;
+      throw e;
     }
   }
 
@@ -192,10 +194,6 @@ public class CheStarterWrapper {
     }
   }
 
-  // ================= //
-  //  PRIVATE METHODS  //
-  // ================= //
-
   private String getNameFromResponse(Response response) {
     try {
       String responseString = response.body().string();
@@ -204,7 +202,6 @@ public class CheStarterWrapper {
       return JsonPath.read(jsonDocument, "$.config.name");
     } catch (IOException e) {
       LOG.error(e.getLocalizedMessage());
-      e.printStackTrace();
     }
     return null;
   }

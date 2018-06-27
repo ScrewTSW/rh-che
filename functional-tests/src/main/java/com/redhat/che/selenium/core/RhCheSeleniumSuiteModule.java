@@ -9,7 +9,7 @@ import com.google.inject.name.Named;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClient;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClientFactory;
 import com.redhat.che.selenium.core.workspace.RhCheTestWorkspaceProvider;
-import org.eclipse.che.selenium.core.client.AbstractTestWorkspaceServiceClient;
+import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
 import org.eclipse.che.selenium.core.configuration.SeleniumTestConfiguration;
 import org.eclipse.che.selenium.core.configuration.TestConfiguration;
 import org.eclipse.che.selenium.core.provider.DefaultTestUserProvider;
@@ -25,9 +25,6 @@ public class RhCheSeleniumSuiteModule extends AbstractModule {
 
   private static final String CHE_MULTIUSER_VARIABLE = "CHE_MULTIUSER";
   private static final String CHE_INFRASTRUCTURE_VARIABLE = "CHE_INFRASTRUCTURE";
-  @Inject
-  @Named("che.host")
-  private String cheHost;
 
   @Override
   protected void configure() {
@@ -37,8 +34,7 @@ public class RhCheSeleniumSuiteModule extends AbstractModule {
     bind(DefaultTestUser.class).toProvider(DefaultTestUserProvider.class);
     bind(TestWorkspaceProvider.class).to(RhCheTestWorkspaceProvider.class).asEagerSingleton();
     install(new FactoryModuleBuilder().build(RhCheTestWorkspaceServiceClientFactory.class));
-    bind(AbstractTestWorkspaceServiceClient.class).to(RhCheTestWorkspaceServiceClient.class);
-    LOG.info("RH-Che Selenium Suite Module successfully loaded for {}", cheHost);
+    bind(TestWorkspaceServiceClient.class).to(RhCheTestWorkspaceServiceClient.class);
   }
 
 }
