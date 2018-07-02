@@ -7,9 +7,10 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClient;
-import com.redhat.che.selenium.core.client.RhCheTestWorkspaceServiceClientFactory;
 import com.redhat.che.selenium.core.workspace.RhCheTestWorkspaceProvider;
 import org.eclipse.che.selenium.core.client.AbstractTestWorkspaceServiceClient;
+import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClient;
+import org.eclipse.che.selenium.core.client.TestWorkspaceServiceClientFactory;
 import org.eclipse.che.selenium.core.configuration.SeleniumTestConfiguration;
 import org.eclipse.che.selenium.core.configuration.TestConfiguration;
 import org.eclipse.che.selenium.core.provider.DefaultTestUserProvider;
@@ -35,9 +36,10 @@ public class RhCheSeleniumSuiteModule extends AbstractModule {
     config.getMap().forEach((key, value) -> bindConstant().annotatedWith(named(key)).to(value));
     bind(DefaultTestUserProvider.class).to(MultiUserCheDefaultTestUserProvider.class);
     bind(DefaultTestUser.class).toProvider(DefaultTestUserProvider.class);
-    bind(TestWorkspaceProvider.class).to(RhCheTestWorkspaceProvider.class).asEagerSingleton();
-    install(new FactoryModuleBuilder().build(RhCheTestWorkspaceServiceClientFactory.class));
+    install(new FactoryModuleBuilder().build(TestWorkspaceServiceClientFactory.class));
+    bind(TestWorkspaceServiceClient.class).to(AbstractTestWorkspaceServiceClient.class);
     bind(AbstractTestWorkspaceServiceClient.class).to(RhCheTestWorkspaceServiceClient.class);
+    bind(TestWorkspaceProvider.class).to(RhCheTestWorkspaceProvider.class).asEagerSingleton();
     LOG.info("RH-Che Selenium Suite Module successfully loaded for {}", cheHost);
   }
 
