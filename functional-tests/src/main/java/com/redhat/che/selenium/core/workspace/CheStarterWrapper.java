@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author Anatolii Bazko
+ * @author Katerina Kanova (kkanova)
  */
 public class CheStarterWrapper {
 
