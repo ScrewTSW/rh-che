@@ -27,7 +27,11 @@ export PR_CHECK_BUILD=${PR_CHECK_BUILD:-"true"}
 function BuildTagAndPushDocker() {
   echo "Docker status:"
   docker images
-  .ci/cico_build.sh
+#  .ci/cico_build.sh
+  ABSOLUTE_PATH=$(cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../ && pwd)
+  docker run --privileged=true -u root -v ${ABSOLUTE_PATH}/:/data/rhche quay.io/tdancs/rh-che-pr-check-dep:latest mvn clean install -f /data/rhche/
+  source ./config
+  .ci/cico_do_docker_build_tag_push.sh
   echo "After build:"
   docker images
 }
@@ -91,30 +95,19 @@ yum install python-pip --assumeyes
 # Test and show version
 pip -V
 
-# Getting dependencies ready
+# Getting dependencies read
+
 yum install --assumeyes \
             docker \
-            git \
-            patch \
-            pcp \
-            bzip2 \
-            golang \
-            make \
             jq \
-            java-1.8.0-openjdk \
-            java-1.8.0-openjdk-devel \
-            centos-release-scl
+            git
 
-yum install --assumeyes \
-            rh-maven33 \
-            rh-nodejs4
-
-systemctl start docker
 pip install yq
 
 set +x
 # Build and push image to docker registry
 source ./config
+systemctl start docker
 BuildTagAndPushDocker
 
 # Deploy rh-che image
