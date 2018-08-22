@@ -11,14 +11,21 @@
  */
 package com.redhat.che.selenium.core.workspace;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.redhat.osio.util.RestClient;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.rmi.server.ExportException;
+import java.util.HashMap;
 import java.util.stream.Collectors;
+import javax.ws.rs.HttpMethod;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,12 +35,17 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** @author Katerina Kanova (kkanova) */
+/**
+ * @author Katerina Kanova (kkanova)
+ */
 public class CheStarterWrapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(CheStarterWrapper.class);
+  private static final Gson GSON = new Gson();
+  private static final JsonParser PARSER = new JsonParser();
 
   private String host;
+  private RestClient cheStarterClient;
 
   @Inject(optional = true)
   @Named("sys.cheStarterUrl")
@@ -42,88 +54,76 @@ public class CheStarterWrapper {
   @Inject
   public CheStarterWrapper(@Named("che.host") String cheHost) {
     this.host = cheHost;
+    this.cheStarterClient = new RestClient(this.cheStarterURL);
   }
-  /** Checks whether che-starter is already running. Throws RuntimeException otherwise. */
+
+  /**
+   * Checks whether che-starter is already running. Throws RuntimeException otherwise.
+   */
   public void checkIsRunning() {
-    Builder requestBuilder = new Request.Builder().url(this.cheStarterURL);
-    Request livenessRequest = requestBuilder.get().build();
-    OkHttpClient client = new OkHttpClient();
-    Response livenessResponse;
+    Response livelinessResponse;
     try {
-      livenessResponse = client.newCall(livenessRequest).execute();
-      if (livenessResponse.code() != 200) {
-        String errMsg =
-            "Liveness probe for che-starter failed with HTTP code: "
-                + livenessResponse.code()
-                + ". It is probably not running";
-        LOG.error(errMsg);
-        throw new RuntimeException(errMsg);
-      }
-    } catch (IOException e) {
-      String errMsg = "Liveness probe for che-starter failed.";
+      livelinessResponse = cheStarterClient.sendRequest("", HttpMethod.GET);
+    } catch (Exception e) {
+      String errMsg = "Liveliness probe for che-starter failed with exception.";
       LOG.error(errMsg, e);
       throw new RuntimeException(errMsg, e);
+    }
+    if (livelinessResponse == null) {
+      String errMsg = "Liveliness probe for che-starter failed. Response is empty";
+      LOG.error(errMsg);
+      throw new RuntimeException(errMsg);
+    }
+    if (livelinessResponse.code() != 200) {
+      String errMsg =
+          "Liveliness probe for che-starter failed with HTTP code: " + livelinessResponse.code();
+      LOG.error(errMsg);
+      throw new RuntimeException(errMsg);
     }
   }
 
   public String createWorkspace(String pathToJson, String token) throws Exception {
-    BufferedReader buffer = null;
+    BufferedReader buffer;
     try {
-      buffer =
-          new BufferedReader(new InputStreamReader(getClass().getResourceAsStream(pathToJson)));
+      buffer = new BufferedReader(
+          new InputStreamReader(getClass().getResourceAsStream(pathToJson))
+      );
     } catch (Exception e) {
       LOG.error("File with json was not found on address: " + pathToJson, e);
       throw e;
     }
     String json = buffer.lines().collect(Collectors.joining("\n"));
-    String path = "/workspace";
-    MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    RequestBody body = RequestBody.create(JSON, json);
-    StringBuilder sb =
-        new StringBuilder(this.cheStarterURL)
-            .append(path)
-            .append("?")
-            .append("masterUrl=")
-            .append(this.host)
-            .append("&")
-            .append("namespace=sth");
-    Builder requestBuilder = new Request.Builder().url(sb.toString());
-    requestBuilder.addHeader("Content-Type", "application/json");
-    requestBuilder.addHeader("Authorization", "Bearer " + token);
-    Request request = requestBuilder.post(body).build();
-    OkHttpClient client = new OkHttpClient();
+    JsonObject body = PARSER.parse(json).getAsJsonObject();
+    String relativePath = "/workspace";
+    String authorization = "Bearer " + token;
+    HashMap<String, String> queryParameters = new HashMap<>();
+    queryParameters.put("masterUrl", this.host);
+    queryParameters.put("namespace", "sth");
+
     try {
-      Response response = client.newCall(request).execute();
-      return getNameFromResponse(response);
-    } catch (IOException e) {
-      LOG.error("Workspace could not be created : " + e.getMessage(), e);
-      return null;
+      return getNameFromResponse(cheStarterClient
+          .sendRequest(relativePath, HttpMethod.POST, body, authorization,
+              queryParameters.entrySet()));
+    } catch (Exception e) {
+      LOG.error("Get name from response failed with exception:" + e.getMessage(), e);
+      throw new RuntimeException("Failed to parse createWorkspace response.", e);
     }
   }
 
-  public boolean deleteWorkspace(String workspaceName, String token) {
-    StringBuilder sb = new StringBuilder(this.cheStarterURL);
-    String path = "/workspace/" + workspaceName;
-    sb.append(path);
-    sb.append("?");
-    sb.append("masterUrl=").append(this.host).append("&").append("namespace=sth");
-    Builder requestBuilder = new Request.Builder().url(sb.toString());
-    requestBuilder.addHeader("Content-Type", "application/json");
-    requestBuilder.addHeader("Authorization", "Bearer " + token);
-    OkHttpClient client = new OkHttpClient();
-    try {
-      Response response = client.newCall(requestBuilder.delete().build()).execute();
-      LOG.info("Workspace delete response : " + response.message());
-      if (!response.isSuccessful()) {
-        if (response.message().equals("Workspace not found")) {
-          LOG.warn(
-              "Workspace could not be deleteded because workspace is not found. Continuing tests.");
-          return true;
-        }
+  public boolean deleteWorkspace(String workspaceName, String token) throws IOException {
+    String relativePath = "/workspace/" + workspaceName;
+    HashMap<String, String> queryParameters = new HashMap<>();
+    queryParameters.put("masterUrl", this.host);
+    queryParameters.put("namespace", "sth");
+    String authorization = "Bearer " + token;
+    Response response = cheStarterClient.sendRequest(relativePath, HttpMethod.DELETE, null, authorization, queryParameters.entrySet());
+    if (response.isSuccessful()) {
+      if (response.message().equals("Workspace not found")) {
+        LOG.warn("\"Workspace could not be deleted because workspace was not found.");
       }
-      return response.isSuccessful();
-    } catch (IOException e) {
-      LOG.error("Workspace could not be deleted : " + e.getMessage(), e);
+      return true;
+    } else {
+      LOG.error("Workspace could not be deleted: " + response.message());
       return false;
     }
   }
@@ -161,16 +161,15 @@ public class CheStarterWrapper {
     }
   }
 
-  private String getNameFromResponse(Response response) {
-    try {
-      String responseString = response.body().string();
-      Object jsonDocument =
-          Configuration.defaultConfiguration().jsonProvider().parse(responseString);
-      return JsonPath.read(jsonDocument, "$.config.name");
-    } catch (IOException e) {
-      LOG.error(e.getLocalizedMessage());
-      e.printStackTrace();
+  private String getNameFromResponse(Response response) throws IOException {
+    if (response.isSuccessful() && response.body() != null) {
+      JsonObject responseObject = PARSER.parse(response.body().string()).getAsJsonObject();
+      return JsonPath.read(responseObject.getAsString(), "$.config.name");
+    } else {
+      String error = "Could not get name from response. Request failed or the response is empty.";
+      LOG.error(error);
+      throw new RuntimeException(error);
     }
-    return null;
   }
+
 }
