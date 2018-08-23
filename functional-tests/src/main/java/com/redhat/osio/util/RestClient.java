@@ -22,7 +22,6 @@ import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.internal.http.HttpMethod;
 import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,18 +53,22 @@ public class RestClient {
     }
   }
 
-  public Response sendRequest(String relativePath, String method) throws IOException {
+  public Response sendRequest(HttpMethods method) throws IOException {
+    return sendRequest(null, method);
+  }
+
+  public Response sendRequest(String relativePath, HttpMethods method) throws IOException {
     return sendRequest(relativePath, method, null);
   }
 
-  public Response sendRequest(String relativePath, String method, JsonObject body)
+  public Response sendRequest(String relativePath, HttpMethods method, JsonObject body)
       throws IOException {
     return sendRequest(relativePath, method, body, null, null);
   }
 
   public Response sendRequest(
       String relativePath,
-      String method,
+      HttpMethods method,
       JsonObject body,
       String authorization,
       Set<Entry<String, String>> queryParams
@@ -90,38 +93,41 @@ public class RestClient {
     requestBuilder.addHeader("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
 
     if (body != null) {
-      if (!HttpMethod.permitsRequestBody(method.toUpperCase())) {
+      if (!HttpMethods.permitsRequestBody(method)) {
         throw new RuntimeException("Incorrect request format: Type "
-            + method.toUpperCase()
-            + " does not allow request body.");
+            + method.valueOf()
+            + " does not allow request body."
+        );
       }
-      requestBody = RequestBody
-          .create(MediaType.parse(ContentType.APPLICATION_JSON.getMimeType()), body.getAsString());
+      requestBody = RequestBody.create(
+          MediaType.parse(ContentType.APPLICATION_JSON.getMimeType()),
+          body.getAsString()
+      );
     }
 
     if (authorization != null) {
       requestBuilder.addHeader("Authorization", authorization);
     }
 
-    Request request = null;
-    switch (method.toUpperCase()) {
-      case "GET":
+    Request request;
+    switch (method) {
+      case GET:
         request = requestBuilder.get().build();
         break;
-      case "POST":
+      case POST:
         request = requestBuilder.post(requestBody).build();
         break;
-      case "DELETE":
+      case DELETE:
         request = requestBuilder.delete(requestBody).build();
         break;
-      case "PUT":
+      case PUT:
         request = requestBuilder.put(requestBody).build();
         break;
-      case "PATCH":
+      case PATCH:
         request = requestBuilder.patch(requestBody).build();
         break;
       default:
-        throw new RuntimeException("Unsupported HTTP method:" + method);
+        throw new RuntimeException("Unsupported HTTP method:" + method.valueOf());
     }
 
     return client.newCall(request).execute();

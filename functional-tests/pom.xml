@@ -46,19 +46,17 @@
             <dependency>
                 <groupId>org.eclipse.che.selenium</groupId>
                 <artifactId>che-selenium-core</artifactId>
-                <!-- <version>${che.version}</version> -->
-                <version>6.9.0</version>
+                <version>${che.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.selenium</groupId>
                 <artifactId>che-selenium-test</artifactId>
-                <!-- <version>${che.version}</version> -->
-                <version>6.9.0</version>
+                <version>${che.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.che.selenium</groupId>
                 <artifactId>che-selenium-test</artifactId>
-                <version>6.9.0</version>
+                <version>${che.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
