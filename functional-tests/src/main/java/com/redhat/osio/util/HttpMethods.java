@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public enum HttpMethods {
-
   GET("GET"),
   POST("POST"),
   PUT("PUT"),
@@ -44,6 +43,7 @@ public enum HttpMethods {
   private static final Logger LOG = LoggerFactory.getLogger(HttpMethods.class);
 
   private String methodName;
+
   HttpMethods(String methodName) {
     this.methodName = methodName;
   }
@@ -53,32 +53,51 @@ public enum HttpMethods {
   }
 
   public HttpMethods parse(String methodName) {
-    if (methodName == null)
-      throw new InvalidArgumentException("Method name cannot be null.");
-    switch(methodName.toUpperCase()) {
-      case "GET": return GET;
-      case "POST": return POST;
-      case "PUT": return PUT;
-      case "PATCH": return PATCH;
-      case "DELETE": return DELETE;
-      case "HEAD": return HEAD;
-      case "MOVE": return MOVE;
-      case "OPTIONS": return OPTIONS;
-      case "PRI": return PRI;
-      case "PROXY": return PROXY;
-      case "TRACE": return TRACE;
-      case "PROPPATCH": return PROPPATCH;
-      case "PROPFIND": return PROPFIND;
-      case "MKCOL": return MKCOL;
-      case "LOCK": return LOCK;
-      case "REPORT": return REPORT;
-      case "CONNECT": return CONNECT;
-      default: LOG.warn("Could not parse unknown HTTPMethod [{}]", methodName);return UNKNOWN;
+    if (methodName == null) throw new InvalidArgumentException("Method name cannot be null.");
+    switch (methodName.toUpperCase()) {
+      case "GET":
+        return GET;
+      case "POST":
+        return POST;
+      case "PUT":
+        return PUT;
+      case "PATCH":
+        return PATCH;
+      case "DELETE":
+        return DELETE;
+      case "HEAD":
+        return HEAD;
+      case "MOVE":
+        return MOVE;
+      case "OPTIONS":
+        return OPTIONS;
+      case "PRI":
+        return PRI;
+      case "PROXY":
+        return PROXY;
+      case "TRACE":
+        return TRACE;
+      case "PROPPATCH":
+        return PROPPATCH;
+      case "PROPFIND":
+        return PROPFIND;
+      case "MKCOL":
+        return MKCOL;
+      case "LOCK":
+        return LOCK;
+      case "REPORT":
+        return REPORT;
+      case "CONNECT":
+        return CONNECT;
+      default:
+        LOG.warn("Could not parse unknown HTTPMethod [{}]", methodName);
+        return UNKNOWN;
     }
   }
 
   /**
    * Courtesy of okhttp3.internal.http
+   *
    * @param method <HttpMethods> Method enum to return permission for
    * @return true if HttpMethod requires a body
    */
@@ -87,25 +106,27 @@ public enum HttpMethods {
         || method.equals(PUT)
         || method.equals(PATCH)
         || method.equals(PROPPATCH) // WebDAV
-        || method.equals(REPORT);   // CalDAV/CardDAV (defined in WebDAV Versioning)
+        || method.equals(REPORT); // CalDAV/CardDAV (defined in WebDAV Versioning)
   }
 
   /**
    * Courtesy of okhttp3.internal.http
+   *
    * @param method <HttpMethods> Method enum to return permission for
    * @return true if HttpMethod allows sending a body
    */
   public static boolean permitsRequestBody(HttpMethods method) {
     return requiresRequestBody(method)
         || method.equals(OPTIONS)
-        || method.equals(DELETE)    // Permitted as spec is ambiguous.
-        || method.equals(PROPFIND)  // (WebDAV) without body: request <allprop/>
-        || method.equals(MKCOL)     // (WebDAV) may contain a body, but behaviour is unspecified
-        || method.equals(LOCK);     // (WebDAV) body: create lock, without body: refresh lock
+        || method.equals(DELETE) // Permitted as spec is ambiguous.
+        || method.equals(PROPFIND) // (WebDAV) without body: request <allprop/>
+        || method.equals(MKCOL) // (WebDAV) may contain a body, but behaviour is unspecified
+        || method.equals(LOCK); // (WebDAV) body: create lock, without body: refresh lock
   }
 
   /**
    * Courtesy of okhttp3.internal.http
+   *
    * @param method <HttpMethods> Method enum to return permission for
    * @return true if HttpMethod invalidates cache after call
    */
@@ -114,11 +135,12 @@ public enum HttpMethods {
         || method.equals(PATCH)
         || method.equals(PUT)
         || method.equals(DELETE)
-        || method.equals(MOVE);     // WebDAV
+        || method.equals(MOVE); // WebDAV
   }
 
   /**
    * Courtesy of okhttp3.internal.http
+   *
    * @param method <HttpMethods> Method enum to return permission for
    * @return true if HttpMethod retains request body after redirect
    */
@@ -128,6 +150,7 @@ public enum HttpMethods {
 
   /**
    * Courtesy of okhttp3.internal.http
+   *
    * @param method <HttpMethods> Method enum to return permission for
    * @return true if HttpMethod redirects to a GET request
    */
@@ -135,5 +158,4 @@ public enum HttpMethods {
     // All requests but PROPFIND should redirect to a GET request.
     return !method.equals(PROPFIND);
   }
-
 }

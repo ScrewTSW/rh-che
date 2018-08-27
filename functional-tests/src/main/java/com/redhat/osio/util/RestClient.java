@@ -71,8 +71,8 @@ public class RestClient {
       HttpMethods method,
       JsonObject body,
       String authorization,
-      Set<Entry<String, String>> queryParams
-  ) throws IOException {
+      Set<Entry<String, String>> queryParams)
+      throws IOException {
     RequestBody requestBody = null;
     StringBuilder urlBuilder = new StringBuilder(serverURL);
 
@@ -81,11 +81,8 @@ public class RestClient {
     if (queryParams != null) {
       urlBuilder.append("?");
       queryParams.forEach(
-          entry -> urlBuilder.append(entry.getKey())
-              .append("=")
-              .append(entry.getValue())
-              .append("&")
-      );
+          entry ->
+              urlBuilder.append(entry.getKey()).append("=").append(entry.getValue()).append("&"));
       urlBuilder.deleteCharAt(urlBuilder.lastIndexOf("&"));
     }
 
@@ -94,15 +91,12 @@ public class RestClient {
 
     if (body != null) {
       if (!HttpMethods.permitsRequestBody(method)) {
-        throw new RuntimeException("Incorrect request format: Type "
-            + method.valueOf()
-            + " does not allow request body."
-        );
+        throw new RuntimeException(
+            "Incorrect request format: Type " + method.valueOf() + " does not allow request body.");
       }
-      requestBody = RequestBody.create(
-          MediaType.parse(ContentType.APPLICATION_JSON.getMimeType()),
-          body.toString()
-      );
+      requestBody =
+          RequestBody.create(
+              MediaType.parse(ContentType.APPLICATION_JSON.getMimeType()), body.toString());
     }
 
     if (authorization != null) {
@@ -132,5 +126,4 @@ public class RestClient {
 
     return client.newCall(request).execute();
   }
-
 }
