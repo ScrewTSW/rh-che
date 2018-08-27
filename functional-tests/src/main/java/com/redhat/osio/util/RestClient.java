@@ -101,7 +101,7 @@ public class RestClient {
       }
       requestBody = RequestBody.create(
           MediaType.parse(ContentType.APPLICATION_JSON.getMimeType()),
-          body.getAsString()
+          body.toString()
       );
     }
 

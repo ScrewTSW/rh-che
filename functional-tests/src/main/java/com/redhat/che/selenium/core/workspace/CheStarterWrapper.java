@@ -11,12 +11,10 @@
  */
 package com.redhat.che.selenium.core.workspace;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.jayway.jsonpath.JsonPath;
 import com.redhat.osio.util.HttpMethods;
 import com.redhat.osio.util.RestClient;
 import java.io.BufferedReader;
@@ -25,6 +23,8 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import okhttp3.Response;
+import org.eclipse.che.api.workspace.shared.dto.WorkspaceDto;
+import org.eclipse.che.dto.server.DtoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 public class CheStarterWrapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(CheStarterWrapper.class);
-  private static final Gson GSON = new Gson();
   private static final JsonParser PARSER = new JsonParser();
 
   private String host;
@@ -55,7 +54,7 @@ public class CheStarterWrapper {
   /**
    * Checks whether che-starter is already running. Throws RuntimeException otherwise.
    */
-  public void checkIsRunning() throws RuntimeException{
+  public boolean checkIsRunning() throws RuntimeException{
     Response livelinessResponse;
     try {
       livelinessResponse = cheStarterClient.sendRequest(HttpMethods.GET);
@@ -75,6 +74,7 @@ public class CheStarterWrapper {
       LOG.error(errMsg);
       throw new RuntimeException(errMsg);
     }
+    return true;
   }
 
   public String createWorkspace(String pathToJson, String token) throws Exception {
@@ -158,8 +158,19 @@ public class CheStarterWrapper {
 
   private String getNameFromResponse(Response response) throws IOException {
     if (response.isSuccessful() && response.body() != null) {
-      JsonObject responseObject = PARSER.parse(response.body().string()).getAsJsonObject();
-      return JsonPath.read(responseObject.getAsString(), "$.config.name");
+      String responseBody = response.body().string();
+//      try {
+//        WorkspaceDto workspaceDto = DtoFactory.getInstance().createDtoFromJson(responseBody, WorkspaceDto.class);
+//        String workspaceID = workspaceDto.getId();
+//        String workspaceName = workspaceDto.getConfig().getName();
+//        LOG.info("Workspace successfully created:"+workspaceID+":"+workspaceName);
+//      } catch (Exception e) {
+//        LOG.warn("Failed to parse WorkspaceDto from response JSON:"+e.getMessage(),e);
+//      }
+      JsonObject workspaceJsonObject = PARSER.parse(responseBody).getAsJsonObject();
+      JsonObject workspaceConfigJsonObject = workspaceJsonObject.get("config").getAsJsonObject();
+      String workspaceName = workspaceConfigJsonObject.get("name").getAsString();
+      return workspaceName;
     } else {
       String error = "Could not get name from response. Request failed or the response is empty.";
       LOG.error(error);
