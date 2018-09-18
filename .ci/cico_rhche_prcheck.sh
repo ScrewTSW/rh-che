@@ -27,11 +27,12 @@ export PR_CHECK_BUILD=${PR_CHECK_BUILD:-"true"}
 function BuildTagAndPushDocker() {
   echo "Docker status:"
   docker images
-  ABSOLUTE_PATH=$(cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../ && pwd)
-  docker run --privileged=true -u root \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v ${ABSOLUTE_PATH}/:/data/rhche/ \
-  quay.io/openshiftio/rhchestage-rh-che-automation-dep:latest scl enable rh-maven33 rh-nodejs4 "mvn -B -f /data/rhche/ clean install"
+  .ci/cico_build.sh
+#  ABSOLUTE_PATH=$(cd $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../ && pwd)
+#  docker run --privileged=true -u root \
+#  -v /var/run/docker.sock:/var/run/docker.sock \
+#  -v ${ABSOLUTE_PATH}/:/data/rhche/ \
+#  quay.io/openshiftio/rhchestage-rh-che-automation-dep:latest scl enable rh-maven33 rh-nodejs4 "mvn -B -f /data/rhche/ clean install"
   .ci/cico_do_docker_build_tag_push.sh
   echo "After build:"
   docker images
