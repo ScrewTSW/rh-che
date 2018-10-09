@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-public class BayesianPomXml {
+public class BayesianPomJson {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TestTestClass.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BayesianPomJson.class);
 
   @Inject private RhCheTestWorkspaceImpl workspace;
   @Inject private NavigateToFile navigateToFile;
@@ -35,10 +35,10 @@ public class BayesianPomXml {
   @Inject private NotificationsPopupPanel notificationsPopupPanel;
   @Inject private ProjectExplorer projectExplorer;
 
-  private static final Integer POM_EXPECTED_ERROR_LINE = 40;
-  private static final Integer POM_INJECTION_ENTRY_POINT = 37;
-  private static final String PROJECT_FILE = "pom.xml";
-  private static final String PROJECT_NAME = "vertx-http-booster";
+  private static final Integer JSON_EXPECTED_ERROR_LINE = 40;
+  private static final Integer JSON_INJECTION_ENTRY_POINT = 37;
+  private static final String PROJECT_FILE = "package.json";
+  private static final String PROJECT_NAME = "nodejs-hello-world";
   private static final String PROJECT_DEPENDENCY =
       "<dependency>\n"
           + "<groupId>ch.qos.logback</groupId>\n"
@@ -60,37 +60,6 @@ public class BayesianPomXml {
     notificationsPopupPanel.waitProgressPopupPanelClose();
 
     openDefinedClass();
-  }
-
-  @Test(priority = 2)
-  public void createBayesianError() {
-    editor.setCursorToLine(POM_INJECTION_ENTRY_POINT);
-    editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
-    editor.waitTabFileWithSavedStatus(PROJECT_FILE);
-    editor.moveCursorToText("1.1.10");
-    try {
-      editor.waitTextInToolTipPopup(ERROR_MESSAGE);
-    } catch (Exception e) {
-      LOG.error(
-          "Bayesian error not present after adding dependency - known issue for prod-preview.");
-      return;
-    }
-    LOG.info("Bayesian error message was present after adding depenedency.");
-  }
-
-  @Test(priority = 3)
-  public void checkErrorPresentAfterReopenFile() {
-    editor.closeAllTabs();
-    openDefinedClass();
-    editor.setCursorToLine(POM_EXPECTED_ERROR_LINE);
-    editor.moveCursorToText("1.1.10");
-    try {
-      editor.waitTextInToolTipPopup(ERROR_MESSAGE);
-    } catch (Exception e) {
-      LOG.error("Bayesian error not present on reopening file - known issue for prod-preview.");
-      return;
-    }
-    LOG.info("Bayesian error message was present after reopening file.");
   }
 
   private void openDefinedClass() {
