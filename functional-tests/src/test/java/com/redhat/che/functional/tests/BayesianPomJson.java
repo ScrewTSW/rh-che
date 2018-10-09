@@ -13,6 +13,7 @@ package com.redhat.che.functional.tests;
 
 import com.google.inject.Inject;
 import com.redhat.che.selenium.core.workspace.RhCheTestWorkspaceImpl;
+import org.eclipse.che.selenium.core.workspace.InjectTestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
