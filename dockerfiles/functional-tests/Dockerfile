@@ -27,9 +27,9 @@ RUN yum update --assumeyes && \
 
 USER ${FABRIC8_USER_NAME}
 COPY docker-entrypoint.sh /home/${FABRIC8_USER_NAME}/
-WORKDIR $HOME/che/
+WORKDIR /home/${FABRIC8_USER_NAME}/che/
 ENTRYPOINT ["/home/fabric8/docker-entrypoint.sh"]
 
-RUN mkdir $HOME/tmp/ && cd $HOME/tmp/ && git clone https://github.com/redhat-developer/che-functional-tests.git && \
-    cd $HOME/tmp/che-functional-tests && mvn clean install -B -DskipTests=true && \
-    cd $HOME/ && rm -rf tmp
+RUN mkdir /home/${FABRIC8_USER_NAME}/tmp/ && cd /home/${FABRIC8_USER_NAME}/tmp/ && git clone https://github.com/redhat-developer/che-functional-tests.git && \
+    cd /home/${FABRIC8_USER_NAME}/tmp/che-functional-tests && mvn clean install -B -DskipTests=true && \
+    cd /home/${FABRIC8_USER_NAME}/ && rm -rf tmp
