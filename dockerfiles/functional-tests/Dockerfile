@@ -6,30 +6,38 @@
 
 FROM library/centos:centos7
 
-USER root
-
 ENV LANG=en_US.utf8 \
     DISPLAY=:99 \
     FABRIC8_USER_NAME=fabric8
 
 COPY google-chrome.repo /etc/yum.repos.d/google-chrome.repo
-RUN yum update --assumeyes && \
+RUN groupadd docker -g 1000 && \
+    useradd --user-group --create-home --shell /usr/bin/bash -G wheel,docker ${FABRIC8_USER_NAME} && \
+    yum update --assumeyes && \
     yum install --assumeyes epel-release && \
     yum install --assumeyes chromedriver && \
     yum install --assumeyes google-chrome-stable && \
     yum install --assumeyes \
         xorg-x11-server-Xvfb \
+        java-1.8.0-openjdk \
+        java-1.8.0-openjdk-devel \
         git \
-        maven && \
+        docker \
+        centos-release-scl && \
+    yum install --assumeyes \
+        rh-maven33 \
+        rh-nodejs8 && \
     yum clean all --assumeyes && \
-    rm -rf /var/cache/yum && \
-    useradd --user-group --create-home --shell /bin/false ${FABRIC8_USER_NAME}
+    rm -rf /var/cache/yum
 
 USER ${FABRIC8_USER_NAME}
-COPY docker-entrypoint.sh /home/${FABRIC8_USER_NAME}/
 WORKDIR /home/${FABRIC8_USER_NAME}/che/
-ENTRYPOINT ["/home/fabric8/docker-entrypoint.sh"]
 
-RUN mkdir /home/${FABRIC8_USER_NAME}/tmp/ && cd /home/${FABRIC8_USER_NAME}/tmp/ && git clone https://github.com/redhat-developer/che-functional-tests.git && \
-    cd /home/${FABRIC8_USER_NAME}/tmp/che-functional-tests && mvn clean install -B -DskipTests=true && \
-    cd /home/${FABRIC8_USER_NAME}/ && rm -rf tmp
+RUN cd /home/${FABRIC8_USER_NAME}/ && \
+    git clone https://github.com/redhat-developer/rh-che.git && \
+    cd /home/${FABRIC8_USER_NAME}/rh-che && \
+    scl enable rh-nodejs8 rh-maven33 "mvn clean install -B --projects functional-tests -Pnative -DskipTests=true"
+
+RUN echo "$MARK" > /dev/null
+COPY docker-entrypoint.sh /home/${FABRIC8_USER_NAME}/
+ENTRYPOINT ["/home/fabric8/docker-entrypoint.sh"]
