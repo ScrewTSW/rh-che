@@ -56,6 +56,28 @@ mvn clean verify -Pfunctional-tests \
     -Dche.offline.to.access.token.exchange.endpoint=https://auth.prod-preview.openshift.io/api/token/refresh
 ```
 
+### Run tests from docker conainer:
+
+By default the docker image is using latest master sources that are embedded inside the docker image along with required dependencies.  
+It is possible to also mount local folder with alternative sources of rh-che/functional-tests
+
+This method spins up `che-starter` container and runs `chromedriver` inside the dependency image.  
+No additional steps required.
+
+```
+docker run --name functional-tests-dep --privileged \
+           -v /var/run/docker.sock:/var/run/docker.sock \
+           -v <logs_folder_full_path>:/home/fabric8/logs/ \
+           -e "RHCHE_ACC_USERNAME=<username>" \
+           -e "RHCHE_ACC_PASSWORD=<password>" \
+           -e "RHCHE_ACC_EMAIL=<email>" \
+           -e "RHCHE_ACC_TOKEN=<offline_token>" \
+           functional-tests-dep
+```
+
+* optional mount for alternate sources  
+`-v <local_functional-tests_full_path>:/home/fabric8/che/`
+
 ### Full list of variables
 
 These tests require TestNG profile and listener must be set to `com.redhat.che.selenium.core.RhCheSeleniumTestHandler`.
