@@ -1,4 +1,25 @@
 #!/bin/bash
+
+if [[ -z "${RHCHE_ACC_USERNAME}" || -z "${RHCHE_ACC_PASSWORD}" || -z "${RHCHE_ACC_EMAIL}" || -z "${RHCHE_ACC_TOKEN}" ]]; then
+  echo "Test credentials not set."
+  echo "Usage:"
+  echo -e "\tdocker run --name functional-tests-dep --privileged -v /var/run/docker.sock:/var/run/docker.sock \\"
+  echo -e "\t       -e \"RHCHE_ACC_USERNAME=<username>\" \\"
+  echo -e "\t       -e \"RHCHE_ACC_PASSWORD=<password>\" \\"
+  echo -e "\t       -e \"RHCHE_ACC_EMAIL=<email>\" \\"
+  echo -e "\t       -e \"RHCHE_ACC_TOKEN=<offline_token>\""
+  echo "Optional parameters:"
+  echo -e "\t       -v <local_logs_directory>:/home/fabric8/logs # Allows logs and screenshots to be collected"
+  echo -e "\t       -v <local_functional-tests_full_path>:/home/fabric8/che/ # Allows mounting custom rh-che/functional-tests sources"
+  echo -e "\t       # Run tests against custom deployment:"
+  echo -e "\t       -e \"RHCHE_HOST_PROTOCOL=<http/https>\" # Protocol to be used, either http or https"
+  echo -e "\t       -e \"RHCHE_HOST_URL=che.openshift.io\" # Which host to run tests against. Just use host name"
+  echo -e "\t       -e \"RHCHE_OFFLINE_ACCESS_EXCHANGE=https://auth.<target>/api/token/refresh\" # Exchange url for refresh token"
+  echo -e "\t       -e \"RHCHE_GITHUB_EXCHANGE=https://auth.<target>/api/token?for=https://github.com\" # Github API token exchange"
+  echo -e "\t       -e \"RHCHE_OPENSHIFT_TOKEN_URL=https://sso.<target>/auth/realms/fabric8/broker\" # Openshift token exchange url"
+  exit 0
+fi
+
 echo "Starting chromedriver"
 nohup chromedriver &
 echo "Running Xvfb"
@@ -16,15 +37,17 @@ export RHCHE_HOST_PROTOCOL=${RHCHE_HOST_PROTOCOL:-"https"}
 export RHCHE_HOST_FULL_URL="${RHCHE_HOST_PROTOCOL}://${RHCHE_HOST_URL}/"
 export RHCHE_EXCLUDED_GROUPS=${RHCHE_EXCLUDED_GROUPS:-"github"}
 
-docker network create --attachable -d bridge localnetwork
-docker network connect localnetwork functional-tests-dep
+export SELF_CONTAINER_ID=$(cat /etc/hostname)
 
-if [[ "${RUN_LOCAL_CODE}" != "true" ]]; then
-  echo "Running functional-tests from embedded sources."
-  cd /home/fabric8/rh-che/
+docker network create --attachable -d bridge localnetwork
+docker network connect localnetwork "${SELF_CONTAINER_ID}"
+
+if [ -d "/root/che" ]; then
+  echo "Running functional-tests mounted to /root/che/"
+  cd /root/che/
   else
-  echo "Running functional-tests mounted to $(pwd)"
-  cd /home/fabric8/che/
+  echo "Running functional-tests from embedded sources."
+  cd /root/rh-che/
 fi
 
 echo "Running che-starter against ${RHCHE_HOST_FULL_URL}"
@@ -49,6 +72,17 @@ scl enable rh-maven33 rh-nodejs8 "mvn clean --projects functional-tests -Pfuncti
   -Dtests.screenshots_dir=${RHCHE_SCREENSHOTS_DIR} \
   test install"
 
-echo "Grabbing che-starter logs"
+if [ -d "/root/logs/" ]; then
+  echo "Logs folder mounted, grabbing logs."
+  echo "Saving che-starter logs to /root/logs/che-starter.log"
+  docker logs che-starter > /root/logs/che-starter.log
+  echo "Saving test run logs to /root/logs/functional-tests.log"
+  docker logs "${SELF_CONTAINER_ID}" > /root/logs/functional-tests.log
+  echo "Archiving artifacts to /root/logs/artifacts/"
+  cp -r ./functional-tests/target/ /root/logs/artifacts/
+fi
 
-docker logs che-starter > /home/fabric8/logs/che-starter.log
+echo "Stopping che-starter"
+docker container kill che-starter
+docker container rm che-starter
+docker network rm localnetwork

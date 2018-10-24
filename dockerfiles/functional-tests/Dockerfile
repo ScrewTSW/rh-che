@@ -12,7 +12,6 @@ ENV LANG=en_US.utf8 \
 
 COPY google-chrome.repo /etc/yum.repos.d/google-chrome.repo
 RUN groupadd docker -g 1000 && \
-    useradd --user-group --create-home --shell /usr/bin/bash -G wheel,docker ${FABRIC8_USER_NAME} && \
     yum update --assumeyes && \
     yum install --assumeyes epel-release && \
     yum install --assumeyes chromedriver && \
@@ -28,16 +27,10 @@ RUN groupadd docker -g 1000 && \
         rh-maven33 \
         rh-nodejs8 && \
     yum clean all --assumeyes && \
-    rm -rf /var/cache/yum
+    rm -rf /var/cache/yum && \
+    git clone https://github.com/redhat-developer/rh-che.git /root/rh-che && \
+    scl enable rh-nodejs8 rh-maven33 "mvn clean install -B -f /root/rh-che/ --projects functional-tests -Pnative -DskipTests=true"
 
-USER ${FABRIC8_USER_NAME}
-WORKDIR /home/${FABRIC8_USER_NAME}/che/
-
-RUN cd /home/${FABRIC8_USER_NAME}/ && \
-    git clone https://github.com/redhat-developer/rh-che.git && \
-    cd /home/${FABRIC8_USER_NAME}/rh-che && \
-    scl enable rh-nodejs8 rh-maven33 "mvn clean install -B --projects functional-tests -Pnative -DskipTests=true"
-
-RUN echo "$MARK" > /dev/null
-COPY docker-entrypoint.sh /home/${FABRIC8_USER_NAME}/
-ENTRYPOINT ["/home/fabric8/docker-entrypoint.sh"]
+WORKDIR /root/
+COPY docker-entrypoint.sh /root/
+ENTRYPOINT ["/root/docker-entrypoint.sh"]
