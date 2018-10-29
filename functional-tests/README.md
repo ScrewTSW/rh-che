@@ -77,23 +77,23 @@ docker run --name functional-tests-dep --privileged \
 ###### Optional mount for alternate sources
 If the source folder is mounted, the tests automatically run from the alternate sources.  
 This change however means, that the dependencies will not be available in the offline mode.  
-  * `-v <local_functional-tests_full_path>:/root/che/`
+* `-v <local_functional-tests_full_path>:/root/che/`
   
 ###### Optional variables for changing target
-  * ```'allowEmpty=true'
-    -e "RHCHE_OFFLINE_ACCESS_EXCHANGE=https://auth.<target>/api/token/refresh"
-    -e "RHCHE_GITHUB_EXCHANGE=https://auth.<target>/api/token?for=https://github.com"
-    -e "RHCHE_OPENSHIFT_TOKEN_URL=https://sso.<target>/auth/realms/fabric8/broker"
-    -e "RHCHE_HOST_PROTOCOL=<http/https>"
-    -e "RHCHE_HOST_URL=che.openshift.io"
-    ```
+* ```'allowEmpty=true'
+  -e "RHCHE_OFFLINE_ACCESS_EXCHANGE=https://auth.<target>/api/token/refresh"
+  -e "RHCHE_GITHUB_EXCHANGE=https://auth.<target>/api/token?for=https://github.com"
+  -e "RHCHE_OPENSHIFT_TOKEN_URL=https://sso.<target>/auth/realms/fabric8/broker"
+  -e "RHCHE_HOST_PROTOCOL=<http/https>"
+  -e "RHCHE_HOST_URL=che.openshift.io"
+  ```
   
 ###### Optional variables for screenshots and logs directory
 If the logs folder is mounted, the container will automatically collect logs into the specified folder.  
-  * ```'allowEmpty=true'
-    -v <local_screenshofts_directory>:/root/logs # che-starter logs
-    -e "RHCHE_SCREENSHOTS_DIR=/root/logs/screenshots # example path for the locally mounted logs folder"
-    ```
+* ```'allowEmpty=true'
+  -v <local_screenshofts_directory>:/root/logs # che-starter logs
+  -e "RHCHE_SCREENSHOTS_DIR=/root/logs/screenshots # example path for the locally mounted logs folder"
+  ```
 
 ### Full list of variables
 
