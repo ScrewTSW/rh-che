@@ -14,6 +14,7 @@ test-output/
 maven-eclipse.xml
 instance/
 config/
+functional-tests/logs/
 
 # Idea #
 ##################
@@ -66,6 +67,5 @@ Thumbs.db
 # Che files #
 #############
 .che
-
 
 overlays

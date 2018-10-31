@@ -12,8 +12,9 @@
 package com.redhat.che.functional.tests;
 
 import com.google.inject.Inject;
-import com.redhat.che.selenium.core.workspace.RhCheTestWorkspaceImpl;
+import com.redhat.che.selenium.core.workspace.RhCheWorkspaceTemplate;
 import org.eclipse.che.selenium.core.workspace.InjectTestWorkspace;
+import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
 import org.eclipse.che.selenium.pageobject.Ide;
 import org.eclipse.che.selenium.pageobject.Loader;
@@ -28,7 +29,9 @@ public class BayesianPomJson {
 
   private static final Logger LOG = LoggerFactory.getLogger(BayesianPomJson.class);
 
-  @Inject private RhCheTestWorkspaceImpl workspace;
+  @InjectTestWorkspace(template = RhCheWorkspaceTemplate.RH_NODEJS)
+  private TestWorkspace workspace;
+
   @Inject private NavigateToFile navigateToFile;
   @Inject private Loader loader;
   @Inject private CodenvyEditor editor;

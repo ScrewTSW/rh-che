@@ -40,7 +40,7 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
 
   private static final Logger LOG = LoggerFactory.getLogger(RhCheTestWorkspaceServiceClient.class);
   private static final String CREATE_WORKSPACE_REQUEST_JSON_PATH =
-      "/configs/create-workspace-request.json";
+      "/requests/workspace/osio/che-starter_vertx.json";
 
   private TestUser owner = null;
   private String token = null;
@@ -73,8 +73,18 @@ public class RhCheTestWorkspaceServiceClient extends AbstractTestWorkspaceServic
     this.token = this.owner.obtainAuthToken();
   }
 
-  public Workspace createWorkspaceWithCheStarter() throws Exception {
-    return createWorkspace(null, 0, null, null);
+  public Workspace createWorkspaceWithCheStarter(String templateFileName) throws Exception {
+    if (owner == null) {
+      throw new IllegalStateException("Workspace does not have an owner.");
+    }
+    this.cheStarterWrapper.checkIsRunning(this.token);
+    String name =
+        this.cheStarterWrapper.createWorkspace(
+            "/requests/workspace/osio/" + templateFileName, token);
+    return requestFactory
+        .fromUrl(getNameBasedUrl(name, owner.getName()))
+        .request()
+        .asDto(WorkspaceDto.class);
   }
 
   @Override

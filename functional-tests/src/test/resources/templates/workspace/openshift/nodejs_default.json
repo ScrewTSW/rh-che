@@ -3,7 +3,7 @@
   "name": "replaced_name",
   "attributes": {},
   "environments": {
-    "default": {
+    "replaced_name": {
       "machines": {
         "dev-machine": {
           "attributes": {
