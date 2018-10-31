@@ -79,7 +79,7 @@ public class BayesianPomXml {
           "Bayesian error not present after adding dependency - known issue for prod-preview.");
       return;
     }
-    LOG.info("Bayesian error message was present after adding depenedency.");
+    LOG.info("Bayesian error message was present after adding dependency.");
   }
 
   @Test(priority = 3)

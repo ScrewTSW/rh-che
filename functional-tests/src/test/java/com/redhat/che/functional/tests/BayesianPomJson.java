@@ -39,18 +39,13 @@ public class BayesianPomJson {
   @Inject private NotificationsPopupPanel notificationsPopupPanel;
   @Inject private ProjectExplorer projectExplorer;
 
-  private static final Integer JSON_EXPECTED_ERROR_LINE = 40;
-  private static final Integer JSON_INJECTION_ENTRY_POINT = 37;
+  private static final Integer JSON_EXPECTED_ERROR_LINE = 12;
+  private static final Integer JSON_INJECTION_ENTRY_POINT = 12;
   private static final String PROJECT_FILE = "package.json";
   private static final String PROJECT_NAME = "nodejs-hello-world";
-  private static final String PROJECT_DEPENDENCY =
-      "<dependency>\n"
-          + "<groupId>ch.qos.logback</groupId>\n"
-          + "<artifactId>logback-core</artifactId>\n"
-          + "<version>1.1.10</version>\n"
-          + "</dependency>\n";
+  private static final String PROJECT_DEPENDENCY = "\"serve-static\": \"1.7.1\" ,\n";
   private static final String ERROR_MESSAGE =
-      "Package ch.qos.logback:logback-core-1.1.10 is vulnerable: CVE-2017-5929";
+      "Package serve-static-1.7.1 is vulnerable: CVE-2015-1164. Recommendation: use version 1.7.2";
 
   @Test(priority = 1)
   public void openClass() throws Exception {
@@ -64,6 +59,37 @@ public class BayesianPomJson {
     notificationsPopupPanel.waitProgressPopupPanelClose();
 
     openDefinedClass();
+  }
+
+  @Test(priority = 2)
+  public void createBayesianError() {
+    editor.setCursorToLine(JSON_INJECTION_ENTRY_POINT);
+    editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
+    editor.waitTabFileWithSavedStatus(PROJECT_FILE);
+    editor.moveCursorToText("1.7.1");
+    try {
+      editor.waitTextInToolTipPopup(ERROR_MESSAGE);
+    } catch (Exception e) {
+      LOG.error(
+          "Bayesian error not present after adding dependency - known issue for prod-preview.");
+      return;
+    }
+    LOG.info("Bayesian error message was present after adding dependency.");
+  }
+
+  @Test(priority = 3)
+  public void checkErrorPresentAfterReopenFile() {
+    editor.closeAllTabs();
+    openDefinedClass();
+    editor.setCursorToLine(JSON_EXPECTED_ERROR_LINE);
+    editor.moveCursorToText("1.7.1");
+    try {
+      editor.waitTextInToolTipPopup(ERROR_MESSAGE);
+    } catch (Exception e) {
+      LOG.error("Bayesian error not present on reopening file - known issue for prod-preview.");
+      return;
+    }
+    LOG.info("Bayesian error message was present after reopening file.");
   }
 
   private void openDefinedClass() {
