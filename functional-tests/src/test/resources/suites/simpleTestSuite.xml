@@ -23,9 +23,11 @@
             <!--<class name="org.eclipse.che.selenium.dashboard.CreateWorkspaceTest"/>-->
             <!--<class name="org.eclipse.che.selenium.dashboard.CreateAndDeleteProjectsTest"/>-->
             <!--<class name="org.eclipse.che.selenium.dashboard.RenameWorkspaceTest"/>-->
-            <class name="org.eclipse.che.selenium.miscellaneous.DialogAboutTest"/>
             <!--<class name="com.redhat.che.functional.tests.WorkspaceTest"/>-->
-            <!--<class name="com.redhat.che.functional.tests.BayesianPomXml"/>-->
+            <class name="org.eclipse.che.selenium.miscellaneous.DialogAboutTest"/>
+            <class name="com.redhat.che.functional.tests.BayesianPomXml"/>
+            <class name="com.redhat.che.functional.tests.BayesianPackageJson"/>
+            <class name="com.redhat.che.functional.tests.BuildAndRunProjectTest"/>
         </classes>
     </test>
 </suite>

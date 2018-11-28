@@ -20,5 +20,4 @@ public final class RhCheWorkspaceTemplate {
   // Che-starter way
   public static final String RH_STARTER_DEFAULT = "che-starter_vertx.json";
   public static final String RH_STARTER_NODEJS = "che-starter_nodejs.json";
-
 }

@@ -13,6 +13,7 @@ package com.redhat.che.functional.tests;
 
 import com.google.inject.Inject;
 import com.redhat.che.selenium.core.workspace.RhCheWorkspaceTemplate;
+import java.util.concurrent.ExecutionException;
 import org.eclipse.che.selenium.core.workspace.InjectTestWorkspace;
 import org.eclipse.che.selenium.core.workspace.TestWorkspace;
 import org.eclipse.che.selenium.pageobject.CodenvyEditor;
@@ -23,11 +24,12 @@ import org.eclipse.che.selenium.pageobject.NotificationsPopupPanel;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-public class BayesianPomJson {
+public class BayesianPackageJson {
 
-  private static final Logger LOG = LoggerFactory.getLogger(BayesianPomJson.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BayesianPackageJson.class);
 
   @InjectTestWorkspace(template = RhCheWorkspaceTemplate.RH_NODEJS)
   private TestWorkspace workspace;
@@ -47,17 +49,32 @@ public class BayesianPomJson {
   private static final String ERROR_MESSAGE =
       "Package serve-static-1.7.1 is vulnerable: CVE-2015-1164. Recommendation: use version 1.7.2";
 
+  @BeforeClass
+  public void checkWorkspace() throws Exception {
+    try {
+      LOG.info(
+          "Workspace with name: "
+              + workspace.getName()
+              + " and id: "
+              + workspace.getId()
+              + " was successfully injected. ");
+      ide.open(workspace);
+      ide.waitOpenedWorkspaceIsReadyToUse();
+      projectExplorer.waitProjectExplorer();
+      notificationsPopupPanel.waitProgressPopupPanelClose();
+    } catch (ExecutionException | InterruptedException e) {
+      LOG.error(
+          "Could not obtain workspace name and id - worskape was probably not successfully injected.");
+      throw e;
+    } catch (Exception e) {
+      LOG.error("Could not open workspace IDE.");
+      throw e;
+    }
+  }
+
   @Test(priority = 1)
-  public void openClass() throws Exception {
-    ide.open(workspace);
-
-    // this block of code ensures that workspace and project is ready and pop-ups are gone
-    // still doesn't seem to be
-    ide.waitOpenedWorkspaceIsReadyToUse();
-    projectExplorer.waitProjectExplorer();
+  public void openClass() {
     projectExplorer.waitItem(PROJECT_NAME);
-    notificationsPopupPanel.waitProgressPopupPanelClose();
-
     openDefinedClass();
   }
 
