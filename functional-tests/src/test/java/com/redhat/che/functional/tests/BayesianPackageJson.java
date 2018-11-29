@@ -25,6 +25,7 @@ import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -50,7 +51,7 @@ public class BayesianPackageJson {
   private static final String ERROR_MESSAGE =
       "Package serve-static-1.7.1 is vulnerable: CVE-2015-1164. Recommendation: use version 1.7.2";
 
-  @BeforeMethod
+  @BeforeClass
   public void openTestFile() throws Exception {
     try {
       LOG.info(
@@ -64,7 +65,6 @@ public class BayesianPackageJson {
       projectExplorer.waitProjectExplorer();
       notificationsPopupPanel.waitProgressPopupPanelClose();
       projectExplorer.waitItem(PROJECT_NAME);
-      openDefinedClass();
     } catch (ExecutionException | InterruptedException e) {
       LOG.error(
           "Could not obtain workspace name and id - worskape was probably not successfully injected.");
@@ -75,17 +75,20 @@ public class BayesianPackageJson {
     }
   }
 
+  @BeforeMethod
+  public void prepareProjectFile() {
+    openDefinedClass();
+    appendDependency();
+  }
+
   @AfterMethod
-  public void closeIDE() {
+  public void closeFiles() {
+    removeDependency();
     editor.closeAllTabs();
   }
 
   @Test
   public void createBayesianError() {
-    editor.setCursorToLine(JSON_INJECTION_ENTRY_POINT);
-    editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
-    editor.waitTabFileWithSavedStatus(PROJECT_FILE);
-    editor.moveCursorToText("1.7.1");
     try {
       editor.waitTextInToolTipPopup(ERROR_MESSAGE);
     } catch (Exception e) {
@@ -96,7 +99,7 @@ public class BayesianPackageJson {
     LOG.info("Bayesian error message was present after adding dependency.");
   }
 
-  @Test(dependsOnMethods = {"createBayesianError"})
+  @Test
   public void checkErrorPresentAfterReopenFile() {
     editor.setCursorToLine(JSON_EXPECTED_ERROR_LINE);
     editor.moveCursorToText("1.7.1");
@@ -116,5 +119,18 @@ public class BayesianPackageJson {
     navigateToFile.selectFileByName(PROJECT_FILE);
     loader.waitOnClosed();
     editor.waitActive();
+  }
+
+  private void appendDependency() {
+    editor.setCursorToLine(JSON_INJECTION_ENTRY_POINT);
+    editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
+    editor.waitTabFileWithSavedStatus(PROJECT_FILE);
+    editor.setCursorToLine(JSON_EXPECTED_ERROR_LINE);
+    editor.moveCursorToText("1.7.1");
+  }
+
+  private void removeDependency() {
+    editor.setCursorToLine(JSON_INJECTION_ENTRY_POINT);
+    editor.deleteCurrentLine();
   }
 }

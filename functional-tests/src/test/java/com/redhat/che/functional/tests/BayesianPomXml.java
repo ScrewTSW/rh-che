@@ -25,6 +25,7 @@ import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -55,7 +56,7 @@ public class BayesianPomXml {
   private static final String ERROR_MESSAGE =
       "Package ch.qos.logback:logback-core-1.1.10 is vulnerable: CVE-2017-5929";
 
-  @BeforeMethod
+  @BeforeClass
   public void openTestFile() throws Exception {
     try {
       LOG.info(
@@ -69,7 +70,6 @@ public class BayesianPomXml {
       projectExplorer.waitProjectExplorer();
       notificationsPopupPanel.waitProgressPopupPanelClose();
       projectExplorer.waitItem(PROJECT_NAME);
-      openDefinedClass();
     } catch (ExecutionException | InterruptedException e) {
       LOG.error(
           "Could not obtain workspace name and id - worskape was probably not successfully injected.");
@@ -80,17 +80,20 @@ public class BayesianPomXml {
     }
   }
 
+  @BeforeMethod
+  public void prepareProjectFile() {
+    openDefinedClass();
+    appendDependency();
+  }
+
   @AfterMethod
-  public void closeIDE() {
+  public void closeFiles() {
+    removeDependency();
     editor.closeAllTabs();
   }
 
   @Test
   public void createBayesianError() {
-    editor.setCursorToLine(POM_INJECTION_ENTRY_POINT);
-    editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
-    editor.waitTabFileWithSavedStatus(PROJECT_FILE);
-    editor.moveCursorToText("1.1.10");
     try {
       editor.waitTextInToolTipPopup(ERROR_MESSAGE);
     } catch (Exception e) {
@@ -101,8 +104,10 @@ public class BayesianPomXml {
     LOG.info("Bayesian error message was present after adding dependency.");
   }
 
-  @Test(dependsOnMethods = {"createBayesianError"})
+  @Test
   public void checkErrorPresentAfterReopenFile() {
+    editor.closeAllTabs();
+    openDefinedClass();
     editor.setCursorToLine(POM_EXPECTED_ERROR_LINE);
     editor.moveCursorToText("1.1.10");
     try {
@@ -121,5 +126,22 @@ public class BayesianPomXml {
     navigateToFile.selectFileByName(PROJECT_FILE);
     loader.waitOnClosed();
     editor.waitActive();
+  }
+
+  private void appendDependency() {
+    editor.setCursorToLine(POM_INJECTION_ENTRY_POINT);
+    editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
+    editor.waitTabFileWithSavedStatus(PROJECT_FILE);
+    editor.setCursorToLine(POM_EXPECTED_ERROR_LINE);
+    editor.moveCursorToText("1.1.10");
+  }
+
+  private void removeDependency() {
+    editor.setCursorToLine(POM_INJECTION_ENTRY_POINT);
+    editor.deleteCurrentLine();
+    editor.deleteCurrentLine();
+    editor.deleteCurrentLine();
+    editor.deleteCurrentLine();
+    editor.deleteCurrentLine();
   }
 }
