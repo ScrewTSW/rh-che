@@ -24,7 +24,8 @@ import org.eclipse.che.selenium.pageobject.NotificationsPopupPanel;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class BayesianPomXml {
@@ -54,8 +55,8 @@ public class BayesianPomXml {
   private static final String ERROR_MESSAGE =
       "Package ch.qos.logback:logback-core-1.1.10 is vulnerable: CVE-2017-5929";
 
-  @BeforeClass
-  public void checkWorkspace() throws Exception {
+  @BeforeMethod
+  public void openTestFile() throws Exception {
     try {
       LOG.info(
           "Workspace with name: "
@@ -67,6 +68,8 @@ public class BayesianPomXml {
       ide.waitOpenedWorkspaceIsReadyToUse();
       projectExplorer.waitProjectExplorer();
       notificationsPopupPanel.waitProgressPopupPanelClose();
+      projectExplorer.waitItem(PROJECT_NAME);
+      openDefinedClass();
     } catch (ExecutionException | InterruptedException e) {
       LOG.error(
           "Could not obtain workspace name and id - worskape was probably not successfully injected.");
@@ -77,13 +80,12 @@ public class BayesianPomXml {
     }
   }
 
-  @Test(priority = 1)
-  public void openClass() {
-    projectExplorer.waitItem(PROJECT_NAME);
-    openDefinedClass();
+  @AfterMethod
+  public void closeIDE() {
+    editor.closeAllTabs();
   }
 
-  @Test(priority = 2)
+  @Test
   public void createBayesianError() {
     editor.setCursorToLine(POM_INJECTION_ENTRY_POINT);
     editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
@@ -99,10 +101,8 @@ public class BayesianPomXml {
     LOG.info("Bayesian error message was present after adding dependency.");
   }
 
-  @Test(priority = 3)
+  @Test(dependsOnMethods = {"createBayesianError"})
   public void checkErrorPresentAfterReopenFile() {
-    editor.closeAllTabs();
-    openDefinedClass();
     editor.setCursorToLine(POM_EXPECTED_ERROR_LINE);
     editor.moveCursorToText("1.1.10");
     try {

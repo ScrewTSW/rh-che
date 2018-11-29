@@ -64,7 +64,7 @@ public class BuildAndRunProjectTest {
     }
   }
 
-  @Test(priority = 1)
+  @Test
   public void runProjectBuild() {
     commandsPalette.openCommandPalette();
     commandsPalette.startCommandByEnterKey("run");

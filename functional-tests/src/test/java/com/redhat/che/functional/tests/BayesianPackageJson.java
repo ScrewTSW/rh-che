@@ -24,7 +24,8 @@ import org.eclipse.che.selenium.pageobject.NotificationsPopupPanel;
 import org.eclipse.che.selenium.pageobject.ProjectExplorer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 public class BayesianPackageJson {
@@ -49,8 +50,8 @@ public class BayesianPackageJson {
   private static final String ERROR_MESSAGE =
       "Package serve-static-1.7.1 is vulnerable: CVE-2015-1164. Recommendation: use version 1.7.2";
 
-  @BeforeClass
-  public void checkWorkspace() throws Exception {
+  @BeforeMethod
+  public void openTestFile() throws Exception {
     try {
       LOG.info(
           "Workspace with name: "
@@ -62,6 +63,8 @@ public class BayesianPackageJson {
       ide.waitOpenedWorkspaceIsReadyToUse();
       projectExplorer.waitProjectExplorer();
       notificationsPopupPanel.waitProgressPopupPanelClose();
+      projectExplorer.waitItem(PROJECT_NAME);
+      openDefinedClass();
     } catch (ExecutionException | InterruptedException e) {
       LOG.error(
           "Could not obtain workspace name and id - worskape was probably not successfully injected.");
@@ -72,13 +75,12 @@ public class BayesianPackageJson {
     }
   }
 
-  @Test(priority = 1)
-  public void openClass() {
-    projectExplorer.waitItem(PROJECT_NAME);
-    openDefinedClass();
+  @AfterMethod
+  public void closeIDE() {
+    editor.closeAllTabs();
   }
 
-  @Test(priority = 2)
+  @Test
   public void createBayesianError() {
     editor.setCursorToLine(JSON_INJECTION_ENTRY_POINT);
     editor.typeTextIntoEditor(PROJECT_DEPENDENCY);
@@ -94,10 +96,8 @@ public class BayesianPackageJson {
     LOG.info("Bayesian error message was present after adding dependency.");
   }
 
-  @Test(priority = 3)
+  @Test(dependsOnMethods = {"createBayesianError"})
   public void checkErrorPresentAfterReopenFile() {
-    editor.closeAllTabs();
-    openDefinedClass();
     editor.setCursorToLine(JSON_EXPECTED_ERROR_LINE);
     editor.moveCursorToText("1.7.1");
     try {

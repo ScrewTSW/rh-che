@@ -14,7 +14,7 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 <suite name="Simple test suite"
        verbose="10"
-       parallel="none"
+       parallel="classes"
        thread-count="1">
 
     <test name="all">
