@@ -73,10 +73,8 @@ function archiveArtifacts() {
   ls -la ./artifacts.key
   chmod 600 ./artifacts.key
   chown $(whoami) ./artifacts.key
-  mkdir -p ./functional-tests/${JOB_NAME}/${BUILD_NUMBER}/surefire-reports
-  #cp -R ./logs/artifacts/surefire-reports/*.txt ./functional-tests/${JOB_NAME}/${BUILD_NUMBER}/surefire-reports
-  cp ./logs/*.log ./functional-tests/${JOB_NAME}/${BUILD_NUMBER}/
-  cp -R ./logs/artifacts/screenshots/ ./functional-tests/${JOB_NAME}/${BUILD_NUMBER}/
-  #cp -R ./logs/artifacts/videos/ ./functional-tests/${JOB_NAME}/${BUILD_NUMBER}/
-  rsync --password-file=./artifacts.key -PHva --relative ./functional-tests/${JOB_NAME}/${BUILD_NUMBER} devtools@artifacts.ci.centos.org::devtools/
+  mkdir -p ./rhche/${JOB_NAME}/${BUILD_NUMBER}/surefire-reports
+  cp ./logs/*.log ./rhche/${JOB_NAME}/${BUILD_NUMBER}/
+  cp -R ./logs/artifacts/screenshots/ ./rhche/${JOB_NAME}/${BUILD_NUMBER}/
+  rsync --password-file=./artifacts.key -PHva --relative ./rhche/${JOB_NAME}/${BUILD_NUMBER} devtools@artifacts.ci.centos.org::devtools/
 }
