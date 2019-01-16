@@ -1,0 +1,31 @@
+@startuml
+'*** init ***
+skinparam backgroundColor #EEEBDC
+skinparam state {
+  EndColor<<Success>> Green
+  EndColor<<Failure>> Red
+}
+'=== **** ===
+
+[*] -> JenkinsParentJob : triggered by merge to master
+JenkinsParentJob --> JenkinsJob : triggered by success
+JenkinsParentJob : * devtools-rh-che-build-che-credentials-master
+
+state JenkinsJob {
+  JenkinsJob : * devtools-rh-che-prcheck-build-dep
+  JenkinsJob : This job is responsible for building two images
+  JenkinsJob : ** quay.io/openshiftio/rhchestage-rh-che-functional-tests-dep
+  JenkinsJob : ** quay.io/openshiftio/rhchestage-rh-che-automation-dep
+
+  [*] -left-> BuildFunctionalTestsDep
+  BuildFunctionalTestsDep -down-> docker_tag_push1 : build_success
+  BuildFunctionalTestsDep : test
+  BuildFunctionalTestsDep -down-> [*] <<Failure>> : build fail
+  docker_tag_push1 -up-> BuildAutomationDep
+  BuildAutomationDep -down-> docker_tag_push2 : build_success
+  docker_tag_push2 -left-> [*] <<Success>>
+}
+
+JenkinsJob -down-> [*] <<Success>> : build success
+
+@enduml

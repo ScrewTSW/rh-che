@@ -43,9 +43,9 @@ Red Hat modifications against the upstream Che include:
 
 ### PR-Check workflow
 
-DEP IMAGE: [![Build Status](https://ci.centos.org/view/Devtools/job/devtools-rh-che-prcheck-build-dep/badge/icon)](https://ci.centos.org/view/Devtools/job/devtools-rh-che-prcheck-build-dep/)
+Dependency image build status: [![Build Status](https://ci.centos.org/buildStatus/icon?job=devtools-rh-che-prcheck-build-dep)](https://ci.centos.org/job/devtools-rh-che-prcheck-build-dep)
 
-[![PR-Check sequence diagram](https://raw.githubusercontent.com/redhat-developer/rh-che/master/documentation/rh-che-prcheck/pr_check_general_squence_diagram.svg)](https://raw.githubusercontent.com/redhat-developer/rh-che/master/documentation/rh-che-prcheck/pr_check_general_squence_diagram.plantuml)
+[![PR-Check sequence diagram](https://raw.githubusercontent.com/redhat-developer/rh-che/master/documentation/rh-che-prcheck/pr_check_general_squence_diagram.png)](https://raw.githubusercontent.com/redhat-developer/rh-che/master/documentation/rh-che-prcheck/pr_check_general_squence_diagram.plantuml)
 
 - This diagram shows the general logic of PR-Check workflow from opening a PR to merge
 - PR_Check job : https://ci.centos.org/view/Devtools/job/devtools-rh-che-rh-che-prcheck-dev.rdu2c.fabric8.io/buildTimeTrend

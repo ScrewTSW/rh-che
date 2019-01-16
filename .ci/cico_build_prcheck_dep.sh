@@ -35,7 +35,7 @@ fi
 
 # Build and push PR-Check base image
 
-DOCKERFILE="pr-check/"
+DOCKERFILE="rh-che-automation-dep/"
 DOCKER_IMAGE="rh-che-automation-dep"
 DOCKER_IMAGE_URL="${REGISTRY}/openshiftio/${NAMESPACE}-${DOCKER_IMAGE}"
 
@@ -53,7 +53,7 @@ date '+DEP-TIMESTAMP: %d.%m.%Y - %H:%M:%S %Z'
 
 # Build and push functional-tests base image
 
-DOCKERFILE="functional-tests/"
+DOCKERFILE="rh-che-functional-tests-dep/"
 DOCKER_IMAGE="rh-che-functional-tests-dep"
 DOCKER_IMAGE_URL="${REGISTRY}/openshiftio/${NAMESPACE}-${DOCKER_IMAGE}"
 
