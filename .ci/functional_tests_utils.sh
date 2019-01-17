@@ -11,47 +11,17 @@ function installOC() {
 	curl -s "https://mirror.openshift.com/pub/openshift-v3/clients/${OC_VERSION}/linux/oc.tar.gz" | tar xvz -C /usr/local/bin
 }
 
-function installJQ() {
-	yum install --assumeyes -q jq
-}
-
-function installEpelRelease() {
-	yum install epel-release --assumeyes
-	yum update --assumeyes
-}
-
-function installYQ() {
-	yum install python-pip --assumeyes
-	pip install yq
-}
-
 function installStartDocker() {
-	yum install --assumeyes docker
+	yum install --assumeyes docker | cat # Shorten output
 	systemctl start docker
 }
 
 function installDependencies() {
-	installEpelRelease
-	installYQ
 	installStartDocker
-	installJQ
 	installOC
 	
 	# Getting dependencies ready
-	yum install --assumeyes \
-	            git \
-	            patch \
-	            pcp \
-	            bzip2 \
-	            golang \
-	            make \
-	            java-1.8.0-openjdk \
-	            java-1.8.0-openjdk-devel \
-	            centos-release-scl
-	
-	yum install --assumeyes \
-	            rh-maven33 \
-	            rh-nodejs8
+	yum install --assumeyes git | cat # Shorten output
 }
 
 function checkAllCreds() {

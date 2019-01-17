@@ -20,7 +20,15 @@ set +o nounset
 function BuildTagAndPushDocker() {
   echo "Docker status:"
   docker images
-  .ci/cico_build.sh
+  ABSOLUTE_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  RH_CHE_FULL_PATH="$(cd "${ABSOLUTE_PATH}/../" && pwd)"
+  chown 1000:1000 -R ${RH_CHE_FULL_PATH}
+  docker run --privileged \
+             -v ${RH_CHE_FULL_PATH}:/data/rh-che
+             quay.io/openshiftio/rhchestage-rh-che-automation-dep:latest \
+             scl enable rh-maven33 rh-nodejs8 "mvn -B -f /data/rh-che/ -Pnative clean install"
+  chown $(id whoami):$(id whoami) -R ${RH_CHE_FULL_PATH}
+  .ci/cico_do_docker_build_tag_push.sh
   echo "After build:"
   docker images
 }
