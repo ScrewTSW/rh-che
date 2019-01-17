@@ -149,7 +149,7 @@ objects:
             timeoutSeconds: 60
           resources:
             limits:
-              memory: 4Gi
+              memory: 1Gi
             requests:
               memory: 256Mi
         serviceAccountName: rhche
