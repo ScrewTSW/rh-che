@@ -97,27 +97,21 @@ There are several images used for different purposes.
 
 #### quay.io/openshiftio/rhchestage-rh-che-functional-tests-dep:latest 
 
-*Purpose and description*: Running periodic tests. Statuses of these jobs are showed on main README.
+*Purpose and description*: Running periodic tests. Statuses of these jobs are shown in main README.
 
 *What does the image contain*: Image contains only functional tests and dependencies of functional tests. 
 
-*When is image build*: When PR is merged and build of master credentials is finished. 
+*When is image built*: When PR is merged and build of master credentials is finished. 
 
 #### quay.io/openshiftio/rhchestage-rh-che-automation-dep:latest 
 
-*Purpose and description*: Running PR checks. Not used now.
+*Purpose and description*: Running PR checks. Will be used in future for building rhche with pre-downloaded dependencies.
 
-*What does the image contain*: Image contains only pre-build dependencies. Source code have to be mounted to `/root/che/`. 
+*What does the image contain*: Image contains only pre-built dependencies. Source code have to be mounted to `/root/che/`. 
 
-*When is image build*: When PR is merged and build of master credentials is finished. 
+*When is image built*: When PR is merged and build of master credentials is finished. 
 
-#### quay.io/openshiftio/rhchestage-rh-che-automation-dep:{shorthash}
-
-*Purpose and description*: Has same content as image with ```latest``` tag. {shorthash} make it easier to see when it was build. Not used now.
-
-*What does the image contain*: Image contains only pre-build dependencies. Source code have to be mounted to `/root/che/`. 
-
-*When is image build*: When PR is merged and build of master credentials is finished. 
+{shorthash} is being used to mark older images to tie the build to a specific PR.
 
 ### Full list of variables
 
