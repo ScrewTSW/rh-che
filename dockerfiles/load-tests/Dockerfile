@@ -18,12 +18,14 @@ RUN yum update --assumeyes \
     libffi-devel
 
 WORKDIR /usr/src/
-RUN curl https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz --output Python-3.7.2.tgz && tar xzf Python-3.7.2.tgz \
- && cd Python-3.7.2 && ./configure --enable-optimizations && make altinstall && make clean \
+RUN echo "Running Python build with `grep -c ^processor /proc/cpuinfo` threads: " \
+ && curl https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz --output Python-3.7.2.tgz && tar xzf Python-3.7.2.tgz \
+ && cd Python-3.7.2 && ./configure --enable-optimizations && make -j `grep -c ^processor /proc/cpuinfo` && make altinstall && make clean \
  && python3.7 -m pip install locustio locust websocket-client python-dateutil
 
 WORKDIR /
 RUN git clone --single-branch --branch=master https://github.com/redhat-developer/rh-che.git rh-che-loadtesting
 WORKDIR /rh-che-loadtesting/load-tests
+RUN echo "a"
 COPY entrypoint.sh entrypoint.sh
 ENTRYPOINT ["/rh-che-loadtesting/load-tests/entrypoint.sh"]

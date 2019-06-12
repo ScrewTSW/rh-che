@@ -4,11 +4,23 @@ export LOCUST_RHCHE_PROTOCOL=${PROTOCOL}
 export LOCUST_RHCHE_BASE_URI=${BASEURL}
 export LOCUST_RHCHE_ACTIVE_TOKEN=${TOKEN}
 export LOCUST_RHCHE_WEBSOCKET_ENDPOINT=${WEBSOCKET:-"websocket"}
+export LOCUST_RHCHE_MASTER_URL=${MASTER}
+export LOCUST_RHCHE_IS_MASTER=${ISMASTER}
 
 echo "Values:"
+echo "Master URL:$LOCUST_RHCHE_MASTER_URL"
+echo "LOCUST_RHCHE_IS_MASTER:${LOCUST_RHCHE_IS_MASTER}"
 echo "LOCUST_RHCHE_PROTOCOL:$LOCUST_RHCHE_PROTOCOL"
 echo "LOCUST_RHCHE_BASE_URI:$LOCUST_RHCHE_BASE_URI"
 echo "LOCUST_RHCHE_ACTIVE_TOKEN length:${#LOCUST_RHCHE_ACTIVE_TOKEN}"
 echo "LOCUST_RHCHE_WEBSOCKET_ENDPOINT:$LOCUST_RHCHE_WEBSOCKET_ENDPOINT"
 
-locust -f real-life.py
+if [[ -z "${LOCUST_RHCHE_IS_MASTER}" ]]; then
+  locust -f real-life.py
+else
+  if [[ "${LOCUST_RHCHE_IS_MASTER}" == "true" ]]; then
+    locust -f real-life.py --master
+  else
+    locust -f real-life.py --slave --master-host=$LOCUST_RHCHE_MASTER_URL
+  fi
+fi

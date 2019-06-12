@@ -30,7 +30,9 @@ docker run -p 8089:8089 \
 -e "TOKEN=<active_token>" \
 -e "BASEURL=rhche-rhche.192.168.99.100.nip.io" \
 -e "PROTOCOL=<http|https>" \
--e "WEBSOCKET=<websocket|websocket-minor>"
+-e "WEBSOCKET=<websocket|websocket-minor>" \
+-e "ISMASTER=<true|false>" \ # optional parameter, if set the behavior will be distributed, otherwise it acts as a single locust master
+-e "MASTER=X.X.X.X" # only mandatory when ISMASTER variable is set
 quay.io/tdancs/rhche-locust-load-tests
 ```
 
