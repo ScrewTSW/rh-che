@@ -1,0 +1,244 @@
+# Copyright (c) 2012-2018 Red Hat, Inc
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+---
+kind: Template
+apiVersion: v1
+metadata:
+  labels:
+    app: loadtest
+  name: loadtest
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: loadtest
+  type: Opaque
+  data:
+    BASEURL: 'che.openshift.io'
+    TOKEN: '<active_token>'
+    PROTOCOL: '<http|https>'
+# Locust master service, DC and route definitions
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: locust
+    name: locust-host
+  spec:
+    ports:
+    - name: http
+      port: 8089
+      protocol: TCP
+      targetPort: 8089
+    - name: master
+      port: 5557
+      protocol: TCP
+    - name: slave
+      port: 5558
+      protocol: TCP
+    selector:
+      app: loadtest
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      app: locust
+    name: locust-host
+  spec:
+    port:
+      targetPort: http
+    to:
+      kind: Service
+      name: locust-host
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: loadtest
+    name: loadtest
+  spec:
+    replicas: 1
+    selector:
+      app: loadtest
+    strategy:
+      rollingParams:
+        timeoutSeconds: 10000
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: loadtest
+      spec:
+        containers:
+        - env:
+          - name: ISMASTER
+            value: "true"
+          envFrom:
+            - configMapRef:
+                name: loadtest
+          image: ${IMAGE}:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8089
+              scheme: HTTP
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+          name: loadtest
+          ports:
+          - containerPort: 8089
+            name: http
+          - containerPort: 5557
+            name: master
+          - containerPort: 5558
+            name: slave
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8089
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 60
+          resources:
+            limits:
+              memory: 512Gi
+            requests:
+              memory: 128Mi
+    triggers:
+    - type: ConfigChange
+# Locust slave for major websocket DC and service definitions
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: locust-slave-major
+    name: locust-slave-major
+  spec:
+    ports:
+    - name: master
+      port: 5557
+      protocol: TCP
+    - name: slave
+      port: 5558
+      protocol: TCP
+    selector:
+      app: loadtest-slave-major
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: loadtest-slave-major
+    name: loadtest-slave-major
+  spec:
+    replicas: 0
+    selector:
+      app: loadtest-slave-major
+    strategy:
+      rollingParams:
+        timeoutSeconds: 10000
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: loadtest-slave-major
+      spec:
+        containers:
+        - env:
+          - name: ISMASTER
+            value: "false"
+          - name: MASTER
+            value: "locust-host"
+          - name: WEBSOCKET
+            value: "websocket"
+          envFrom:
+            - configMapRef:
+                name: loadtest
+          image: ${IMAGE}:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          name: loadtest-slave-major
+          ports:
+          - containerPort: 5557
+            name: master
+          - containerPort: 5558
+            name: slave
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 256Mi
+    triggers:
+    - type: ConfigChange
+# Locust slave for minor websocket DC and service definitions
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: locust-slave-minor
+    name: locust-slave-minor
+  spec:
+    ports:
+    - name: master
+      port: 5557
+      protocol: TCP
+    - name: slave
+      port: 5558
+      protocol: TCP
+    selector:
+      app: loadtest-slave-minor
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: loadtest-slave-minor
+    name: loadtest-slave-minor
+  spec:
+    replicas: 0
+    selector:
+      app: loadtest-slave-minor
+    strategy:
+      rollingParams:
+        timeoutSeconds: 10000
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: loadtest-slave-minor
+      spec:
+        containers:
+        - env:
+          - name: ISMASTER
+            value: "false"
+          - name: MASTER
+            value: "locust-host"
+          - name: WEBSOCKET
+            value: "websocket-minor"
+          envFrom:
+            - configMapRef:
+                name: loadtest
+          image: ${IMAGE}:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          name: loadtest-slave-minor
+          ports:
+          - containerPort: 5557
+            name: master
+          - containerPort: 5558
+            name: slave
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              memory: 256Mi
+    triggers:
+    - type: ConfigChange
+parameters:
+- name: IMAGE
+  value: quay.io/tdancs/rhche-locust-load-tests
+- name: IMAGE_TAG
+  value: latest
