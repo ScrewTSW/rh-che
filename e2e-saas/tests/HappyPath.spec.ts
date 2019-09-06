@@ -18,6 +18,9 @@ const workspaceName: string = NameGenerator.generate('wksp-test-', 5);
 const namespace: string = TestConstants.TS_SELENIUM_USERNAME;
 const sampleName: string = 'console-java-simple';
 const fileFolderPath: string = `${sampleName}/src/main/java/org/eclipse/che/examples`;
+const gradleFolderPath: string = `${sampleName}/.gradle`;
+const binFolderPath: string = `${sampleName}/.settings`;
+const settingsFolderPath: string = `${sampleName}/bin`;
 const tabTitle: string = 'HelloWorld.java';
 const codeNavigationClassName: string = 'String.class';
 
@@ -76,6 +79,9 @@ suite('RhChe E2E', async () => {
         });
 
         test('Expand project and open file in editor', async () => {
+            await projectTree.waitItem(settingsFolderPath, 10);
+            await projectTree.waitItem(gradleFolderPath, 10);
+            await projectTree.waitItem(binFolderPath, 10);
             await projectTree.expandPathAndOpenFile(fileFolderPath, tabTitle);
         });
     });
