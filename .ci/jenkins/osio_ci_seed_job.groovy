@@ -66,8 +66,8 @@ pipelineJob("${workspaceStartupReporterJobName}") {
     cpsScm {
       scm {
         git {
-            remote { url('https://www.github.com/redhat-developer/rh-che.git') }
-            branches('*/master')
+            remote { url('https://www.github.com/ScrewTSW/rh-che.git') }
+            branches('*/548-feature-use-jenkins-job-dsl-for-osioperf-jobs')
           scriptPath('.ci/workspace-startup/' + "${workspaceStartupReporterJobName}" + '.groovy')
           extensions { }
         }
