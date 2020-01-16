@@ -25,6 +25,11 @@ eval "$(./env-toolkit load -f jenkins-env.json -r \
 source ./config
 source .ci/functional_tests_utils.sh
 
+### remove before merge vv
+CHE_TESTUSER_NAME=$RH_CHE_AUTOMATION_CHE_PREVIEW_USERNAME;CHE_TESTUSER_PASSWORD=$RH_CHE_AUTOMATION_CHE_PREVIEW_PASSWORD;.ci/cico_rollout_test.sh
+exit 1
+### remove before merge ^^
+
 echo "Checking credentials:"
 checkAllCreds
 
