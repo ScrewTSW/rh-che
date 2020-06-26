@@ -90,11 +90,15 @@ class TokenBehavior(TaskSet):
       self.clusterName = self.cluster.split(".")[1] + "-preview"
     else:
       self.clusterName = self.cluster.split(".")[1]
+    print("Calling "+str(tokensURL+self.cluster)+" with auth token:")
+    print(str(self.locust.taskUserToken))
     os_token_response = self.client.get(
         tokensURL + self.cluster,
         headers={"Authorization": "Bearer " + self.locust.taskUserToken},
         name="getOpenshiftToken", catch_response=True)
     os_token_response_json = os_token_response.json()
+    print("Debugging response from auth api for "+username)
+    print(str(os_token_response_json))
     self.openshiftToken = os_token_response_json["access_token"]
     self.soft_start_failure_cmd = "zabbix_sender -vv" + \
       " -z " + _zabbixServer + \
